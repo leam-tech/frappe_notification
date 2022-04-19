@@ -1,0 +1,52 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Notification Channel",
+  "modified": "2022-04-19 09:00:10.636554",
+  "name": "SMS",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "SMS"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Notification Channel",
+  "modified": "2022-04-19 09:00:16.055403",
+  "name": "Email",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "Email"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Notification Channel",
+  "modified": "2022-04-19 09:00:21.112057",
+  "name": "Telegram",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "Telegram"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Notification Channel",
+  "modified": "2022-04-19 09:00:26.579002",
+  "name": "Whatsapp",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "Whatsapp"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Notification Channel",
+  "modified": "2022-04-19 09:00:29.561863",
+  "name": "Slack",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "title": "Slack"
+ }
+]
