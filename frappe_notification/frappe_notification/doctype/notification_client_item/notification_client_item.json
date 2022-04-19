@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-04-16 21:14:11.854008",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "notification_client"
+ ],
+ "fields": [
+  {
+   "fieldname": "notification_client",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Notification Client",
+   "options": "Notification Client",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2022-04-16 21:14:19.765572",
+ "modified_by": "Administrator",
+ "module": "Frappe Notification",
+ "name": "Notification Client Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
