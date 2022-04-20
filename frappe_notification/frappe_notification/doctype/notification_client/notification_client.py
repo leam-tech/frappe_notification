@@ -39,7 +39,7 @@ class NotificationClient(Document):
 
         self.name = frappe.scrub(title).replace("_", "-")
 
-    def after_insert(self):
+    def before_insert(self):
         self.api_key = frappe.generate_hash(length=self.LEN_API_KEY)
         self.api_secret = frappe.generate_hash(length=self.LEN_API_SECRET)
 
