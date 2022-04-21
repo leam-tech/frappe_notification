@@ -5,6 +5,7 @@
 import unittest
 from faker import Faker
 
+import frappe
 from frappe_testing import TestFixture
 from frappe_notification import (
     NotificationClient,
@@ -174,3 +175,28 @@ class TestNotificationTemplate(unittest.TestCase):
         sender_type, sender = d.get_channel_sender(_CHANNEL)
         self.assertEqual(sender_type, "A")
         self.assertEqual(sender, "B")
+
+    def test_get_lang_templates(self):
+        _lang_templates = frappe._dict({
+            "en": ("en-subject!", "en-content!"),
+            "ar": ("ar-subject", "ar-content"),
+            "es": ("es-subject", "es-content"),
+        })
+
+        d = NotificationTemplate(dict(
+            doctype="Notification Template",
+            title=self.faker.first_name(),
+            lang="en",
+            subject=_lang_templates["en"][0],
+            content=_lang_templates["en"][1],
+            lang_templates=[
+                dict(lang="ar", subject=_lang_templates["ar"][0], content=_lang_templates["ar"][1]),
+                dict(lang="es", subject=_lang_templates["es"][0], content=_lang_templates["es"][1]),
+            ]))
+
+        self.assertEqual(d.get_lang_templates("en"), _lang_templates["en"])
+        self.assertEqual(d.get_lang_templates("ar"), _lang_templates["ar"])
+        self.assertEqual(d.get_lang_templates("es"), _lang_templates["es"])
+
+        # Now, for a lang for which template is not defined
+        self.assertEqual(d.get_lang_templates("pr"), _lang_templates["en"])

@@ -134,6 +134,23 @@ class NotificationTemplate(Document):
     def make_outbox_entry(self):
         pass
 
+    def get_lang_templates(self, lang: str):
+        """
+        Gets the templates (subject & content) defined for a particular language
+        """
+        subject = self.subject
+        content = self.content
+
+        if self.lang == lang:
+            return (subject, content)
+
+        for row in self.lang_templates:
+            if row.lang != lang:
+                continue
+            return (row.subject, row.content)
+
+        return (subject, content)
+
     def get_channel_sender(self, channel: str):
         """
         Senders can be Email Account, Telegram Bot
