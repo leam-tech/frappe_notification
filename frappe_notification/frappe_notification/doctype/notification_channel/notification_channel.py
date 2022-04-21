@@ -6,4 +6,6 @@ from frappe.model.document import Document
 
 
 class NotificationChannel(Document):
-    pass
+    title: str
+    sender_type: str
+    default_sender: str

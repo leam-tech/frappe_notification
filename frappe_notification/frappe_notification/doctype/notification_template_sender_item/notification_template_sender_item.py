@@ -4,5 +4,8 @@
 # import frappe
 from frappe.model.document import Document
 
+
 class NotificationTemplateSenderItem(Document):
-	pass
+    channel: str
+    sender_type: str
+    sender: str

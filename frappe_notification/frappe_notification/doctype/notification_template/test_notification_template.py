@@ -9,6 +9,7 @@ from frappe_testing import TestFixture
 from frappe_notification import (
     NotificationClient,
     NotificationClientFixtures,
+    NotificationChannelFixtures,
     NotificationClientNotFound,
     set_active_notification_client)
 
@@ -59,17 +60,21 @@ class NotificationTemplateFixtures(TestFixture):
 
 
 class TestNotificationTemplate(unittest.TestCase):
+
+    channels = NotificationChannelFixtures()
     clients = NotificationClientFixtures()
     templates = NotificationTemplateFixtures()
     faker = Faker()
 
     @classmethod
     def setUpClass(cls):
+        cls.channels.setUp()
         cls.clients.setUp()
 
     @classmethod
     def tearDownClass(cls):
         cls.clients.tearDown()
+        cls.channels.tearDown()
 
     def setUp(self):
         self.templates.setUp()
@@ -152,3 +157,20 @@ class TestNotificationTemplate(unittest.TestCase):
         d.append("lang_templates", dict(lang=d.lang_templates[0].lang, subject="A"))
         d.validate_language_templates()
         self.assertEqual(len(d.lang_templates), PREDEFINED_ROW_COUNT)
+
+    def test_get_channel_sender(self):
+
+        _CHANNEL = self.channels[0].name
+
+        d = NotificationTemplate(dict(
+            doctype="Notification Template",
+            title=self.faker.first_name(),
+            lang="en",
+            channel_senders=[
+                dict(channel=self.channels[-1].name, sender_type="C", sender="D"),
+                dict(channel=_CHANNEL, sender_type="A", sender="B"),
+            ]))
+
+        sender_type, sender = d.get_channel_sender(_CHANNEL)
+        self.assertEqual(sender_type, "A")
+        self.assertEqual(sender, "B")

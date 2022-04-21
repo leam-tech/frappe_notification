@@ -26,3 +26,11 @@ class NotificationClientNotFound(FrappeNotificationException):
         self.error_code = "NOTIFICATION_CLIENT_NOT_FOUND"
         self.message = frappe._("Notification Client Not Found")
         self.http_status_code = 403
+
+
+class NotificationChannelNotFound(FrappeNotificationException):
+    def __init__(self, channel: str) -> None:
+        self.error_code = "NOTIFICATION_CHANNEL_NOT_FOUND"
+        self.message = frappe._("Notification Channel Not Found")
+        self.http_status_code = 404
+        self.data = frappe._dict(channel=channel)

@@ -8,9 +8,13 @@ from frappe.model.document import Document
 
 from frappe_notification import (
     get_active_notification_client,
+    NotificationChannel,
     FrappeNotificationException,
-    NotificationClientNotFound)
+    NotificationClientNotFound,
+    NotificationChannelNotFound)
 from ..notification_client_item.notification_client_item import NotificationClientItem
+from ..notification_template_sender_item.notification_template_sender_item import \
+    NotificationTemplateSenderItem
 from ..notification_template_language_item.notification_template_language_item import \
     NotificationTemplateLanguageItem
 
@@ -49,6 +53,7 @@ class NotificationTemplate(Document):
     created_by: str
     allowed_clients: List[NotificationClientItem]
     lang_templates: List[NotificationTemplateLanguageItem]
+    channel_senders: List[NotificationTemplateSenderItem]
 
     def autoname(self):
         client = self.created_by or get_active_notification_client()
@@ -128,3 +133,19 @@ class NotificationTemplate(Document):
 
     def make_outbox_entry(self):
         pass
+
+    def get_channel_sender(self, channel: str):
+        """
+        Senders can be Email Account, Telegram Bot
+        """
+        if not frappe.db.exists("Notification Channel", channel):
+            raise NotificationChannelNotFound(channel=channel)
+
+        # Search in the template itself
+        for row in self.channel_senders:
+            if row.channel != channel:
+                continue
+            return (row.sender_type, row.sender)
+
+        channel: NotificationChannel = frappe.get_doc("Notification Channel", channel)
+        return (channel.sender_type, channel.default_sender)
