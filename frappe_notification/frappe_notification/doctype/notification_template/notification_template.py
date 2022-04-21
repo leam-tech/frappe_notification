@@ -10,6 +10,9 @@ from frappe_notification import (
     get_active_notification_client,
     FrappeNotificationException,
     NotificationClientNotFound)
+from ..notification_client_item.notification_client_item import NotificationClientItem
+from ..notification_template_language_item.notification_template_language_item import \
+    NotificationTemplateLanguageItem
 
 
 class NotificationRecipientItem():
@@ -40,10 +43,12 @@ class NotificationTemplate(Document):
     title: str
     subject: str
     content: str
+    lang: str
     last_used_on: str
     last_used_by: str
-    allowed_clients: List[dict]
     created_by: str
+    allowed_clients: List[NotificationClientItem]
+    lang_templates: List[NotificationTemplateLanguageItem]
 
     def autoname(self):
         client = self.created_by or get_active_notification_client()
@@ -59,7 +64,10 @@ class NotificationTemplate(Document):
             self.created_by = client
 
     def validate(self):
+        if not self.lang:
+            self.lang = "en"
         self.validate_allowed_clients()
+        self.validate_language_templates()
 
     def validate_allowed_clients(self):
         """
@@ -91,6 +99,29 @@ class NotificationTemplate(Document):
                     template_manager=self.created_by,
                     client=client.name,
                     client_manager=client.managed_by)
+
+    def validate_language_templates(self):
+        i = 0
+        languages_defined = []
+        if self.lang:
+            languages_defined.append(self.lang)
+
+        while i < len(self.lang_templates):
+            row = self.lang_templates[i]
+            remove_row = False
+            if not row.subject and not row.content:
+                remove_row = True
+
+            if row.lang not in languages_defined:
+                languages_defined.append(row.lang)
+            else:
+                remove_row = True
+
+            if remove_row:
+                self.lang_templates.remove(row)
+                continue
+
+            i += 1
 
     def send_notification(self, context: dict, recipients: List[NotificationRecipientItem]):
         pass

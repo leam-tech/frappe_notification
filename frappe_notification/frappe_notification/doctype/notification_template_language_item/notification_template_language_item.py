@@ -6,4 +6,6 @@ from frappe.model.document import Document
 
 
 class NotificationTemplateLanguageItem(Document):
-    pass
+    lang: str
+    subject: str
+    content: str

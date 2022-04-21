@@ -126,3 +126,29 @@ class TestNotificationTemplate(unittest.TestCase):
 
         with self.assertRaises(AllowedClientNotManagedByManager):
             d.insert()
+
+    def test_lang_templates(self):
+
+        PREDEFINED_ROW_COUNT = 1
+        d = NotificationTemplate(dict(
+            doctype="Notification Template",
+            title=self.faker.first_name(),
+            lang="en",
+            lang_templates=[
+                dict(lang="ar", subject="A", content="B")
+            ]))
+
+        # Try setting the same 'en' row
+        d.append("lang_templates", dict(lang=d.lang, subject=self.faker.first_name()))
+        d.validate_language_templates()
+        self.assertEqual(len(d.lang_templates), PREDEFINED_ROW_COUNT)
+
+        # Try add empty content & subject
+        d.append("lang_templates", dict(lang="en-US", subject=None))
+        d.validate_language_templates()
+        self.assertEqual(len(d.lang_templates), PREDEFINED_ROW_COUNT)
+
+        # Try adding duplicate lang
+        d.append("lang_templates", dict(lang=d.lang_templates[0].lang, subject="A"))
+        d.validate_language_templates()
+        self.assertEqual(len(d.lang_templates), PREDEFINED_ROW_COUNT)
