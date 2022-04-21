@@ -7,6 +7,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "enabled",
   "title",
   "sender_type",
   "default_sender"
@@ -31,11 +32,17 @@
    "fieldtype": "Dynamic Link",
    "label": "Default Sender",
    "options": "sender_type"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-21 13:48:01.430299",
+ "modified": "2022-04-21 14:58:05.115490",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Channel",
