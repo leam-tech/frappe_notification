@@ -7,12 +7,14 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
+  "lang",
   "subject",
   "content",
   "last_used_on",
   "last_used_by",
   "allowed_clients",
-  "created_by"
+  "created_by",
+  "lang_templates"
  ],
  "fields": [
   {
@@ -57,11 +59,25 @@
    "label": "Created By",
    "options": "Notification Client",
    "read_only": 1
+  },
+  {
+   "default": "en",
+   "fieldname": "lang",
+   "fieldtype": "Link",
+   "label": "Language",
+   "options": "Language",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lang_templates",
+   "fieldtype": "Table",
+   "label": "Language Templates",
+   "options": "Notification Template Language Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-21 12:01:19.730329",
+ "modified": "2022-04-21 12:46:33.747322",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template",
