@@ -7,7 +7,9 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "title"
+  "title",
+  "sender_type",
+  "default_sender"
  ],
  "fields": [
   {
@@ -17,11 +19,23 @@
    "label": "Title",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "sender_type",
+   "fieldtype": "Link",
+   "label": "Sender Type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "default_sender",
+   "fieldtype": "Dynamic Link",
+   "label": "Default Sender",
+   "options": "sender_type"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-16 21:10:16.501756",
+ "modified": "2022-04-21 13:48:01.430299",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Channel",

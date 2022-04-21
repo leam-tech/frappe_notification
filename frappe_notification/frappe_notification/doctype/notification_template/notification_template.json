@@ -14,7 +14,8 @@
   "last_used_by",
   "allowed_clients",
   "created_by",
-  "lang_templates"
+  "lang_templates",
+  "channel_senders"
  ],
  "fields": [
   {
@@ -73,11 +74,17 @@
    "fieldtype": "Table",
    "label": "Language Templates",
    "options": "Notification Template Language Item"
+  },
+  {
+   "fieldname": "channel_senders",
+   "fieldtype": "Table",
+   "label": "Channel Senders",
+   "options": "Notification Template Sender Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-21 12:46:33.747322",
+ "modified": "2022-04-21 13:57:09.089263",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template",
