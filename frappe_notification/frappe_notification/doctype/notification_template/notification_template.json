@@ -1,7 +1,6 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:title",
  "creation": "2022-04-16 21:12:02.742296",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -12,7 +11,8 @@
   "content",
   "last_used_on",
   "last_used_by",
-  "allowed_clients"
+  "allowed_clients",
+  "created_by"
  ],
  "fields": [
   {
@@ -20,8 +20,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Title",
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "fieldname": "subject",
@@ -51,11 +50,18 @@
    "fieldtype": "Table MultiSelect",
    "label": "Allowed Clients",
    "options": "Notification Client Item"
+  },
+  {
+   "fieldname": "created_by",
+   "fieldtype": "Link",
+   "label": "Created By",
+   "options": "Notification Client",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-16 21:16:29.823407",
+ "modified": "2022-04-21 12:01:19.730329",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template",

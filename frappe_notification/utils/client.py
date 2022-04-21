@@ -8,7 +8,8 @@ def get_active_notification_client() -> Union[str, None]:
     if getattr(frappe.local, "notification_client", None):
         return frappe.local.notification_client
 
-    header = frappe.safe_decode(frappe.get_request_header("Authorization", str()))
+    header = frappe.safe_decode(frappe.get_request_header("Authorization", str())) \
+        if frappe.request else None
     if not header:
         return None
 

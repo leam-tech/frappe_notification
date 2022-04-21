@@ -2,6 +2,7 @@
 # See license.txt
 
 import unittest
+from typing import List
 from faker import Faker
 
 import frappe
@@ -41,14 +42,14 @@ class NotificationClientFixtures(TestFixture):
                 client.insert()
                 self.add_document(client)
 
-    def get_manager_client(self):
+    def get_manager_client(self) -> NotificationClient:
         import random
         return random.choice([x for x in self if x.is_client_manager])
 
-    def get_clients_managed_by(self, client_manager: str):
+    def get_clients_managed_by(self, client_manager: str) -> List[NotificationClient]:
         return [x for x in self if x.managed_by == client_manager]
 
-    def get_non_manager_client(self):
+    def get_non_manager_client(self) -> NotificationClient:
         import random
         return random.choice([x for x in self if x.managed_by is not None])
 
