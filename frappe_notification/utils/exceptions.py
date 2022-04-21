@@ -19,3 +19,10 @@ class FrappeNotificationException(Exception):
             error_code=self.error_code,
             **self.data,
         )
+
+
+class NotificationClientNotFound(FrappeNotificationException):
+    def __init__(self) -> None:
+        self.error_code = "NOTIFICATION_CLIENT_NOT_FOUND"
+        self.message = frappe._("Notification Client Not Found")
+        self.http_status_code = 403

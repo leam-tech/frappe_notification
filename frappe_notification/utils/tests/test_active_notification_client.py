@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import frappe
 
-from ..client import get_active_notification_client
+from ..client import get_active_notification_client, set_active_notification_client
 from frappe_notification import NotificationClient, NotificationClientFixtures
 
 
@@ -20,7 +20,7 @@ class TestGetActiveNotificationClient(TestCase):
         cls.clients.tearDown()
 
     def tearDown(self) -> None:
-        frappe.local.notification_client = None
+        set_active_notification_client(None)
 
     def base64_encode(self, txt: str):
         return frappe.safe_decode(base64.b64encode(
@@ -69,3 +69,14 @@ class TestGetActiveNotificationClient(TestCase):
 
         r = get_active_notification_client()
         self.assertEqual(r, None)
+
+    @patch("frappe.get_request_header")
+    def test_set_active_client(self, mock_get_request_header):
+        client = self.clients[0]
+        mock_get_request_header.return_value = None
+
+        self.assertEqual(get_active_notification_client(), None)
+
+        set_active_notification_client(client.name)
+
+        self.assertEqual(get_active_notification_client(), client.name)

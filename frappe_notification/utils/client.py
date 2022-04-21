@@ -1,7 +1,8 @@
 import frappe
+from typing import Union
 
 
-def get_active_notification_client():
+def get_active_notification_client() -> Union[str, None]:
     import base64
 
     if getattr(frappe.local, "notification_client", None):
@@ -32,5 +33,9 @@ def get_active_notification_client():
     if doc_secret != api_secret:
         return None
 
-    frappe.local.notification_client = client
+    set_active_notification_client(client)
     return client
+
+
+def set_active_notification_client(client: str):
+    frappe.local.notification_client = client
