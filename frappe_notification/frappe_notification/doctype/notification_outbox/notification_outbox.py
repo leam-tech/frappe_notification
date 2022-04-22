@@ -79,10 +79,10 @@ class NotificationOutbox(Document):
         errors = []
 
         def _process_exc(params: ChannelHandlerInvokeParams, err):
-            err = err.as_dict() if isinstance(err, FrappeNotificationException) else dict(
-                exc=str(err), data=dict())
+            err = err.as_dict() if isinstance(err, FrappeNotificationException) else frappe._dict(
+                message=str(err), error_code="UNKNOWN_ERROR")
 
-            err.data.update(**params)
+            err.update(dict(params))
             return err
 
         for row in self.recipients:

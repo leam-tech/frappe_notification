@@ -12,8 +12,11 @@ class FrappeNotificationException(Exception):
     data: dict = frappe._dict()
     http_status_code: int = 500
 
-    def __init__(self) -> None:
+    def __init__(self, error_code: str = None, message: str = None, data: dict = None) -> None:
         super().__init__(None)
+        self.error_code = error_code
+        self.message = message
+        self.data = data
 
     def as_dict(self):
         return frappe._dict(
