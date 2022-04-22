@@ -212,11 +212,11 @@ class TestNotificationTemplate(unittest.TestCase):
         - EMail test@test.com
         - SMS +966 560440266
         """
-        sms_channel = self.get_channel("SMS")
+        sms_channel = self.channels.get_channel("SMS")
         sms_receiver_1 = "+966 560440266"
         sms_receiver_2 = "+966 560440262"
 
-        email_channel = self.get_channel("Email")
+        email_channel = self.channels.get_channel("Email")
         email_sender_type = "Email Account"
         email_sender = "test@notifications.com"
         email_receiver_1 = "test1@notifications.com"
@@ -260,7 +260,7 @@ class TestNotificationTemplate(unittest.TestCase):
                 self.assertEqual(outbox_row.sender, email_sender)
 
     @patch("frappe.get_hooks", spec=True)
-    def test_old_send_notification_1(self, mock_get_hooks: MagicMock):
+    def old_send_notification_1(self, mock_get_hooks: MagicMock):
         """
         Let's try sending out a simple OTP Notification to
         - EMail test@test.com
@@ -324,12 +324,6 @@ class TestNotificationTemplate(unittest.TestCase):
             self.assertIsInstance(recipient_status.status, NotificationChannelStatus)
             self.assertEqual(recipient_status.channel, recipient.channel)
             self.assertEqual(recipient_status.channel_id, recipient.channel_id)
-
-    def get_channel(self, channel: str):
-        channel = next(iter([
-            x.name for x in self.channels if x.name.lower() == channel.lower()]), None)
-        self.assertIsNotNone(channel)
-        return channel
 
 
 def _channel_handler(

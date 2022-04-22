@@ -1,7 +1,6 @@
 # Copyright (c) 2022, Leam Technology Systems and contributors
 # For license information, please see license.txt
 from typing import List, Dict, Callable, Union
-from functools import partial
 
 import frappe
 from frappe.model.document import Document
@@ -126,8 +125,6 @@ class NotificationOutbox(Document):
 
         if isinstance(handler, str):
             handler = frappe.get_attr(handler)
-
-        handler = partial(handler, channel=channel)
 
         return _set_handler(handler)
 

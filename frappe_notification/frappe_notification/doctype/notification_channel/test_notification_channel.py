@@ -37,6 +37,11 @@ class NotificationChannelFixtures(TestFixture):
 
             self.add_document(channel)
 
+    def get_channel(self, channel: str):
+        channel = next(iter([
+            x.name for x in self if x.name.lower() == channel.lower()]), None)
+        return channel
+
 
 class TestNotificationChannel(unittest.TestCase):
     pass
