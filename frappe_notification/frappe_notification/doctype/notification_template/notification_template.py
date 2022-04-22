@@ -1,10 +1,7 @@
 # Copyright (c) 2022, Leam Technology Systems and contributors
 # For license information, please see license.txt
 
-from typing import List, Union
-from collections import OrderedDict
-from functools import partial
-from enum import Enum
+from typing import List
 
 import frappe
 from frappe.model.document import Document
@@ -12,11 +9,11 @@ from frappe.model.document import Document
 from frappe_notification import (
     get_active_notification_client,
     NotificationChannel,
+    NotificationOutbox,
     FrappeNotificationException,
     NotificationClientNotFound,
-    NotificationChannelDisabled,
-    NotificationChannelHandlerNotFound,
     NotificationChannelNotFound)
+
 from ..notification_client_item.notification_client_item import NotificationClientItem
 from ..notification_template_sender_item.notification_template_sender_item import \
     NotificationTemplateSenderItem
@@ -27,30 +24,6 @@ from ..notification_template_language_item.notification_template_language_item i
 class NotificationRecipientItem(frappe._dict):
     channel: str
     channel_id: str
-
-
-class NotificationChannelStatus(Enum):
-    PENDING = "Pending"
-    QUEUED = "Queued"
-    ERROR = "Error"
-
-
-class NotificationRecipientStatus(NotificationRecipientItem):
-    channel: str
-    channel_id: str
-    sender_type: str
-    sender: str
-    status: NotificationChannelStatus
-    exc: Union[BaseException, FrappeNotificationException]
-
-
-class NotificationStatus(frappe._dict):
-    subject: str
-    content: str
-    recipients: List[NotificationRecipientStatus]
-
-
-HOOK_NOTIFICATION_CHANNEL_HANDLER = "notification_channel_handler"
 
 
 class OnlyManagerTemplatesCanBeShared(FrappeNotificationException):
@@ -85,8 +58,10 @@ class NotificationTemplate(Document):
     channel_senders: List[NotificationTemplateSenderItem]
 
     def autoname(self):
+        """
+        - Client name already includes manager name
+        """
         client = self.created_by or get_active_notification_client()
-        # Client name already includes manager name if specified
         if not client:
             raise NotificationClientNotFound()
 
@@ -135,6 +110,12 @@ class NotificationTemplate(Document):
                     client_manager=client.managed_by)
 
     def validate_language_templates(self):
+        """
+        - Make sure the main lang is not duplicated in lang_templates[]
+        - Make sure no duplicate lang exists in lang_templates
+        - Remove duplicate rows
+        - Remove lang_rows with empty subject & content
+        """
         i = 0
         languages_defined = []
         if self.lang:
@@ -159,97 +140,45 @@ class NotificationTemplate(Document):
 
     def send_notification(
             self,
-            context: dict, recipients: List[NotificationRecipientItem]) -> NotificationStatus:
+            context: dict,
+            recipients: List[NotificationRecipientItem]) -> NotificationOutbox:
         """
-        Send out the Notifications!
-        All the handlers should return `NotificationStatus`
-        with list of recipient and their ChannelStatuses,
-        Just like how this function returns
+        Create Notification Outbox Document which will manage and track the procedure
         """
         # Blow the templates!
         subject, content = self.get_lang_templates(context.get("lang") or self.lang)
         subject = frappe.render_template(subject, context)
         content = frappe.render_template(content, context)
 
-        _recipient_statuses = OrderedDict()
-        _handlers = dict()
-        _channel_validations = dict()
+        _sender_info = dict()
 
-        def _get_handler(channel: str):
-            """
-            Validate everything is fine with the channel before returning a cached-handler
-            """
-            if _channel_validations.get(channel):
-                return _channel_validations.get(channel)
+        def _get_sender(channel: str):
+            if channel in _sender_info:
+                return _sender_info.get(channel)
 
-            if not frappe.db.exists("Notification Channel", channel):
-                return _channel_validations.setdefault(
-                    channel, NotificationChannelNotFound(channel=channel))
+            _sender_info[channel] = self.get_channel_sender(channel)
+            return _sender_info[channel]
 
-            if not frappe.db.get_value("Notification Channel", channel, "enabled"):
-                return _channel_validations.setdefault(
-                    channel, NotificationChannelDisabled(channel=channel))
-
-            handler = frappe.get_hooks(HOOK_NOTIFICATION_CHANNEL_HANDLER, dict()).get(channel)
-            if not handler:
-                return _channel_validations.setdefault(
-                    channel, NotificationChannelHandlerNotFound(channel=channel))
-
-            sender_type, sender = self.get_channel_sender(channel=channel)
-            handler = partial(handler, channel=channel, sender_type=sender_type, sender=sender)
-
-            return _channel_validations.setdefault(channel, handler)
-
-        # Let's loop through each recipient and populate _handlers dict
-        for recipient in recipients:
-            recipient = NotificationRecipientStatus(dict(
-                channel=recipient.get("channel"),
-                channel_id=recipient.get("channel_id"),
-                status=NotificationChannelStatus.PENDING,
-                exc=None,
-            ))
-            _recipient_statuses[f"{recipient.channel}-{recipient.channel_id}"] = recipient
-
-            handler = _get_handler(recipient.channel)
-            if isinstance(handler, FrappeNotificationException):
-                recipient.status = NotificationChannelStatus.ERROR
-                recipient.exc = handler
-            else:
-                handler_info = _handlers.setdefault(
-                    recipient.channel, frappe._dict(handler=handler, recipients=[]))
-                handler_info.recipients.append(recipient.channel_id)
-
-        for channel, info in _handlers.items():
-            try:
-                status: NotificationStatus = info.handler(
-                    recipients=info.recipients,
-                    subject=subject,
-                    content=content)
-            except BaseException as e:
-                status = NotificationStatus(dict(
-                    subject=subject, content=content,
-                    recipients=[
-                        frappe._dict(status=NotificationChannelStatus.ERROR, exc=e)
-                        for x in info.recipients
-                    ]))
-
-            for i in range(len(info.recipients)):
-                recipient_status: NotificationRecipientStatus = frappe._dict(status.recipients[i])
-                k = f"{recipient_status.channel}-{recipient_status.channel_id}"
-                _recipient_statuses[k].update(recipient_status)
-
-        status = NotificationStatus(dict(
+        outbox = frappe.get_doc(dict(
+            doctype="Notification Outbox",
             subject=subject,
             content=content,
-            recipients=list(_recipient_statuses.values())
+            client=get_active_notification_client(),
+            recipients=[
+                dict(
+                    channel=x.get("channel"),
+                    channel_id=x.get("channel_id"),
+                    sender_type=_get_sender(x.get("channel"))[0],
+                    sender=_get_sender(x.get("channel"))[1],
+                )
+                for x in recipients
+            ]
         ))
 
-        self.make_outbox_entry(status)
+        outbox.docstatus = 1
+        outbox.insert(ignore_permissions=True)
 
-        return status
-
-    def make_outbox_entry(self, status: NotificationStatus):
-        pass
+        return outbox
 
     def get_lang_templates(self, lang: str):
         """

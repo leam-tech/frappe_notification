@@ -11,6 +11,7 @@ import frappe
 from frappe_testing import TestFixture
 from frappe_notification import (
     NotificationClient,
+    NotificationOutbox,
     NotificationClientFixtures,
     NotificationChannelFixtures,
     NotificationClientNotFound,
@@ -20,10 +21,7 @@ from .notification_template import (
     NotificationTemplate,
     AllowedClientNotManagedByManager,
     OnlyManagerTemplatesCanBeShared,
-    NotificationRecipientStatus,
-    NotificationStatus,
-    NotificationChannelStatus,
-    HOOK_NOTIFICATION_CHANNEL_HANDLER,)
+)
 
 
 class NotificationTemplateFixtures(TestFixture):
@@ -207,8 +205,8 @@ class TestNotificationTemplate(unittest.TestCase):
         # Now, for a lang for which template is not defined
         self.assertEqual(d.get_lang_templates("pr"), _lang_templates["en"])
 
-    @patch("frappe.get_hooks", spec=True)
-    def test_send_notification_1(self, mock_get_hooks: MagicMock):
+    @patch("frappe.model.document.Document.insert", spec=True)
+    def test_send_notification_1(self, mock_insert: MagicMock):
         """
         Let's try sending out a simple OTP Notification to
         - EMail test@test.com
@@ -226,22 +224,6 @@ class TestNotificationTemplate(unittest.TestCase):
 
         _OTP = "989566"
         _CTX = dict(otp=_OTP)
-
-        sms_mock = MagicMock()
-        email_mock = MagicMock()
-        sms_mock.side_effect = _channel_handler
-        email_mock.side_effect = _channel_handler
-
-        def _get_hooks(hook, *args, **kwargs):
-            if hook == HOOK_NOTIFICATION_CHANNEL_HANDLER:
-                return dict({
-                    sms_channel: sms_mock,
-                    email_channel: email_mock
-                })
-            else:
-                return dict()
-
-        mock_get_hooks.side_effect = _get_hooks
 
         d = NotificationTemplate(dict(
             doctype="Notification Template",
@@ -261,7 +243,55 @@ class TestNotificationTemplate(unittest.TestCase):
             {"channel": email_channel, "channel_id": email_receiver_2},
         ]
 
-        status = d.send_notification(_CTX, recipient_list)
+        outbox = d.send_notification(_CTX, recipient_list)
+        self.assertIsNotNone(outbox)
+        mock_insert.assert_called_once()
+
+        self.assertEqual(len(outbox.recipients), len(recipient_list))
+        for i in range(len(recipient_list)):
+            outbox_row = outbox.recipients[i]
+            recipient = frappe._dict(recipient_list[i])
+
+            self.assertEqual(outbox_row.channel, recipient.channel)
+            self.assertEqual(outbox_row.channel_id, recipient.channel_id)
+
+            if recipient.channel == email_channel:
+                self.assertEqual(outbox_row.sender_type, email_sender_type)
+                self.assertEqual(outbox_row.sender, email_sender)
+
+    @patch("frappe.get_hooks", spec=True)
+    def test_old_send_notification_1(self, mock_get_hooks: MagicMock):
+        """
+        Let's try sending out a simple OTP Notification to
+        - EMail test@test.com
+        - SMS +966 560440266
+        """
+        sms_channel = self.get_channel("SMS")
+        sms_receiver_1 = "+966 560440266"
+        sms_receiver_2 = "+966 560440262"
+
+        email_channel = self.get_channel("Email")
+        email_sender_type = "Email Account"
+        email_sender = "test@notifications.com"
+        email_receiver_1 = "test1@notifications.com"
+        email_receiver_2 = "test2@notifications.com"
+
+        sms_mock = MagicMock()
+        email_mock = MagicMock()
+        sms_mock.side_effect = _channel_handler
+        email_mock.side_effect = _channel_handler
+
+        def _get_hooks(hook, *args, **kwargs):
+            if hook == HOOK_NOTIFICATION_CHANNEL_HANDLER:
+                return dict({
+                    sms_channel: sms_mock,
+                    email_channel: email_mock
+                })
+            else:
+                return dict()
+
+        mock_get_hooks.side_effect = _get_hooks
+
         self.assertIsInstance(status, NotificationStatus)
         self.assertEqual(len(recipient_list), len(status.recipients))
 

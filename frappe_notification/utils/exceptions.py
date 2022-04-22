@@ -1,3 +1,5 @@
+from typing import List
+
 import frappe
 
 
@@ -18,6 +20,17 @@ class FrappeNotificationException(Exception):
             message=self.message,
             error_code=self.error_code,
             **self.data,
+        )
+
+
+class RecipientErrors(FrappeNotificationException):
+    def __init__(self, recipient_errors: List[FrappeNotificationException]) -> None:
+        self.error_code = "NOTIFICATION_RECEIVER_ERRORS"
+        self.message = frappe._("There are errors with the receivers mentioned")
+        self.data = frappe._dict(
+            recipient_errors=[
+                x.as_dict() if isinstance(x, FrappeNotificationException) else x
+                for x in recipient_errors]
         )
 
 
