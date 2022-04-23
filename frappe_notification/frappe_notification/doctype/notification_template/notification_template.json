@@ -6,7 +6,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "title",
+  "key",
   "lang",
   "subject",
   "content",
@@ -18,13 +18,6 @@
   "channel_senders"
  ],
  "fields": [
-  {
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Title",
-   "reqd": 1
-  },
   {
    "fieldname": "subject",
    "fieldtype": "Data",
@@ -80,11 +73,18 @@
    "fieldtype": "Table",
    "label": "Channel Senders",
    "options": "Notification Template Sender Item"
+  },
+  {
+   "fieldname": "key",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Key",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-21 13:57:09.089263",
+ "modified": "2022-04-23 11:07:02.605323",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template",

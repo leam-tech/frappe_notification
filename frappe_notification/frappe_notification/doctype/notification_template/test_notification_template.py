@@ -46,7 +46,7 @@ class NotificationTemplateFixtures(TestFixture):
 
         t = NotificationTemplate(dict(
             doctype="Notification Template",
-            title="OTP Template",
+            key="OTP Template",
             subject="This is your OTP: {{ otp }}",
             content="OTP For Life!",
             created_by=manager.name,
@@ -93,7 +93,7 @@ class TestNotificationTemplate(unittest.TestCase):
         # When no active client is available, result should be None
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),))
+            key=self.faker.first_name(),))
         with self.assertRaises(NotificationClientNotFound):
             d.insert()
 
@@ -111,7 +111,7 @@ class TestNotificationTemplate(unittest.TestCase):
 
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),
+            key=self.faker.first_name(),
             allowed_clients=[
                 dict(notification_client=self.clients.get_non_manager_client().name)
             ]))
@@ -128,7 +128,7 @@ class TestNotificationTemplate(unittest.TestCase):
         set_active_notification_client(manager.name)
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),
+            key=self.faker.first_name(),
             allowed_clients=[
                 dict(notification_client=client.name)
             ]))
@@ -141,7 +141,7 @@ class TestNotificationTemplate(unittest.TestCase):
         PREDEFINED_ROW_COUNT = 1
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),
+            key=self.faker.first_name(),
             lang="en",
             lang_templates=[
                 dict(lang="ar", subject="A", content="B")
@@ -168,7 +168,7 @@ class TestNotificationTemplate(unittest.TestCase):
 
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),
+            key=self.faker.first_name(),
             lang="en",
             channel_senders=[
                 dict(channel=self.channels[-1].name, sender_type="C", sender="D"),
@@ -188,7 +188,7 @@ class TestNotificationTemplate(unittest.TestCase):
 
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),
+            key=self.faker.first_name(),
             lang="en",
             subject=_lang_templates["en"][0],
             content=_lang_templates["en"][1],
@@ -230,7 +230,7 @@ class TestNotificationTemplate(unittest.TestCase):
 
         d = NotificationTemplate(dict(
             doctype="Notification Template",
-            title=self.faker.first_name(),
+            key=self.faker.first_name(),
             lang="en",
             subject="Your Subject OTP is {{otp}}",
             content="Your Content OTP is {{otp}}",

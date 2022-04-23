@@ -47,7 +47,7 @@ class AllowedClientNotManagedByManager(FrappeNotificationException):
 
 
 class NotificationTemplate(Document):
-    title: str
+    key: str
     subject: str
     content: str
     lang: str
@@ -66,7 +66,7 @@ class NotificationTemplate(Document):
         if not client:
             raise NotificationClientNotFound()
 
-        self.name = frappe.scrub(f"{client}-{self.title}").replace("_", "-")
+        self.name = frappe.scrub(f"{client}-{self.key}").replace("_", "-")
 
     def before_insert(self):
         client = self.created_by or get_active_notification_client()
