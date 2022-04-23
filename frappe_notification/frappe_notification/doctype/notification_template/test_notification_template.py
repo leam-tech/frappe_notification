@@ -5,7 +5,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from faker import Faker
-from typing import List
 
 import frappe
 from frappe_testing import TestFixture
@@ -206,12 +205,16 @@ class TestNotificationTemplate(unittest.TestCase):
         self.assertEqual(d.get_lang_templates("pr"), _lang_templates["en"])
 
     @patch("frappe.model.document.Document.insert", spec=True)
-    def test_send_notification_1(self, mock_insert: MagicMock):
+    @patch("frappe.model.document.Document.db_set", spec=True)
+    def test_send_notification_1(self, db_set_mock: MagicMock, mock_insert: MagicMock):
         """
         Let's try sending out a simple OTP Notification to
         - EMail test@test.com
         - SMS +966 560440266
         """
+        client = self.clients[0].name
+        set_active_notification_client(client)
+
         sms_channel = self.channels.get_channel("SMS")
         sms_receiver_1 = "+966 560440266"
         sms_receiver_2 = "+966 560440262"
@@ -243,9 +246,13 @@ class TestNotificationTemplate(unittest.TestCase):
             {"channel": email_channel, "channel_id": email_receiver_2},
         ]
 
-        outbox = d.send_notification(_CTX, recipient_list)
+        outbox: NotificationOutbox = d.send_notification(_CTX, recipient_list)
         self.assertIsNotNone(outbox)
         mock_insert.assert_called_once()
+
+        self.assertEqual(db_set_mock.call_count, 2)
+        self.assertIn("last_used_on", [x[0][0] for x in db_set_mock.call_args_list])
+        self.assertIn(("last_used_by", client), [x[0] for x in db_set_mock.call_args_list])
 
         self.assertEqual(len(outbox.recipients), len(recipient_list))
         for i in range(len(recipient_list)):
@@ -258,89 +265,3 @@ class TestNotificationTemplate(unittest.TestCase):
             if recipient.channel == email_channel:
                 self.assertEqual(outbox_row.sender_type, email_sender_type)
                 self.assertEqual(outbox_row.sender, email_sender)
-
-    @patch("frappe.get_hooks", spec=True)
-    def old_send_notification_1(self, mock_get_hooks: MagicMock):
-        """
-        Let's try sending out a simple OTP Notification to
-        - EMail test@test.com
-        - SMS +966 560440266
-        """
-        sms_channel = self.get_channel("SMS")
-        sms_receiver_1 = "+966 560440266"
-        sms_receiver_2 = "+966 560440262"
-
-        email_channel = self.get_channel("Email")
-        email_sender_type = "Email Account"
-        email_sender = "test@notifications.com"
-        email_receiver_1 = "test1@notifications.com"
-        email_receiver_2 = "test2@notifications.com"
-
-        sms_mock = MagicMock()
-        email_mock = MagicMock()
-        sms_mock.side_effect = _channel_handler
-        email_mock.side_effect = _channel_handler
-
-        def _get_hooks(hook, *args, **kwargs):
-            if hook == HOOK_NOTIFICATION_CHANNEL_HANDLER:
-                return dict({
-                    sms_channel: sms_mock,
-                    email_channel: email_mock
-                })
-            else:
-                return dict()
-
-        mock_get_hooks.side_effect = _get_hooks
-
-        self.assertIsInstance(status, NotificationStatus)
-        self.assertEqual(len(recipient_list), len(status.recipients))
-
-        subject = frappe.render_template(d.subject, _CTX)
-        content = frappe.render_template(d.content, _CTX)
-
-        sms_mock.assert_called_once_with(
-            channel=sms_channel,
-            recipients=[sms_receiver_1, sms_receiver_2],
-            subject=subject,
-            content=content,
-            sender=None,
-            sender_type=None
-        )
-
-        email_mock.assert_called_once_with(
-            channel=email_channel,
-            recipients=[email_receiver_1, email_receiver_2],
-            subject=subject,
-            content=content,
-            sender=email_sender,
-            sender_type=email_sender_type,
-        )
-
-        for i in range(len(recipient_list)):
-            recipient = frappe._dict(recipient_list[i])
-            recipient_status = status.recipients[i]
-
-            self.assertIsInstance(recipient_status, NotificationRecipientStatus)
-            self.assertIsInstance(recipient_status.status, NotificationChannelStatus)
-            self.assertEqual(recipient_status.channel, recipient.channel)
-            self.assertEqual(recipient_status.channel_id, recipient.channel_id)
-
-
-def _channel_handler(
-        channel: str,
-        sender_type: str,
-        sender: str,
-        subject: str,
-        content: str,
-        recipients: List[str] = []):
-
-    return NotificationStatus(dict(
-        subject=subject,
-        content=content,
-        recipients=[NotificationRecipientStatus(dict(
-            status=NotificationChannelStatus.QUEUED,
-            sender_type=sender_type,
-            sender=sender,
-            channel=channel,
-            channel_id=x
-        )) for x in recipients]))

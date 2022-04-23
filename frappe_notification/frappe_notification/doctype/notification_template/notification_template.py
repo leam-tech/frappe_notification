@@ -5,6 +5,7 @@ from typing import List
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import now_datetime
 
 from frappe_notification import (
     get_active_notification_client,
@@ -177,6 +178,9 @@ class NotificationTemplate(Document):
 
         outbox.docstatus = 1
         outbox.insert(ignore_permissions=True)
+
+        self.db_set("last_used_on", now_datetime())
+        self.db_set("last_used_by", get_active_notification_client())
 
         return outbox
 
