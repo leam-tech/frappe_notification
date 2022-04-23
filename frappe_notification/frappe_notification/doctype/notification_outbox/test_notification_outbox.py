@@ -18,7 +18,12 @@ from frappe_notification import (
     RecipientErrors
 )
 
-from .notification_outbox import (NotificationOutbox, HOOK_NOTIFICATION_CHANNEL_HANDLER)
+from .notification_outbox import (
+    NotificationOutbox,
+    NotificationOutboxRecipientItem,
+    ChannelHandlerInvokeParams,
+    NotificationOutboxStatus,
+    HOOK_NOTIFICATION_CHANNEL_HANDLER)
 
 
 class NotificationOutboxFixtures(TestFixture):
@@ -40,20 +45,28 @@ class TestNotificationOutbox(unittest.TestCase):
     VALID_MOBILE_NO = "+966560440266"
     INVALID_MOBILE_NO_1 = "+966560440299"
     INVALID_MOBILE_NO_2 = "+966560440200"
-    NUMBER_VERIFICATIONS = dict({
-        VALID_MOBILE_NO: None,
-        INVALID_MOBILE_NO_1: FrappeNotificationException(
-            error_code="INVALID_MOBILE_NO_1",
-            message="Number provided is invalid",
-            data=dict()
-        ),
-        INVALID_MOBILE_NO_2: Exception("Random Error Occurred")
-    })
+    CHANNEL_VERIFICATIONS = dict()
+
+    VALID_EMAIL_ID = "test1@notifications.com"
 
     @classmethod
     def setUpClass(cls):
         cls.channels.setUp()
         cls.clients.setUp()
+
+        cls.CHANNEL_VERIFICATIONS[cls.channels.get_channel("SMS")] = dict({
+            cls.VALID_MOBILE_NO: None,
+            cls.INVALID_MOBILE_NO_1: FrappeNotificationException(
+                error_code="INVALID_MOBILE_NO_1",
+                message="Number provided is invalid",
+                data=dict()
+            ),
+            cls.INVALID_MOBILE_NO_2: Exception("Random Error Occurred")
+        })
+
+        cls.CHANNEL_VERIFICATIONS[cls.channels.get_channel("Email")] = dict({
+            cls.VALID_EMAIL_ID: None
+        })
 
     def setUp(self):
         self.outboxes.setUp()
@@ -139,40 +152,69 @@ class TestNotificationOutbox(unittest.TestCase):
         d.name = "test-outbox-1"
         d.recipients[0].name = "test-outbox-row-1"
 
-        sms_handler = self.get_sms_handler()
+        sms_handler = self.get_channel_handler(sms_channel)
         d._channel_handlers[sms_channel] = sms_handler
 
-        # Test valid number
+        # - Test valid number
         d.recipients = [[x for x in d.recipients if x.channel == sms_channel][0]]
         d.validate_recipient_channel_ids()
-        sms_handler.assert_called_once_with(
-            channel=sms_channel,
-            channel_id=d.recipients[0].channel_id,
-            content=d.content,
-            subject=d.subject,
-            to_validate=True,
-            sender_type=d.recipients[0].sender_type,
-            sender=d.recipients[0].sender,
-            outbox=d.name,
-            outbox_row_name=d.recipients[0].name)
+        params = self._get_channel_handler_invoke_params(d, d.recipients[0])
+        params.to_validate = True
+        sms_handler.assert_called_once_with(**params)
 
-        # Test invalid number
+        # - Test invalid number
         d.recipients[0].channel_id = self.INVALID_MOBILE_NO_1
         with self.assertRaises(RecipientErrors) as r:
             d.validate_recipient_channel_ids()
 
         exc = r.exception
-        # Asserting some complex flow of error codes 👀
+        #       Asserting some complex flow of error codes 👀
         self.assertEqual(exc.data.recipient_errors[0].error_code,
-                         self.NUMBER_VERIFICATIONS[self.INVALID_MOBILE_NO_1].error_code)
+                         self.CHANNEL_VERIFICATIONS[sms_channel].get(
+                             self.INVALID_MOBILE_NO_1).error_code)
 
-        # Test invalid number with random-error
+        # - Test invalid number with random-error
         d.recipients[0].channel_id = self.INVALID_MOBILE_NO_2
         with self.assertRaises(RecipientErrors) as r:
             d.validate_recipient_channel_ids()
         exc = r.exception
         self.assertEqual(exc.data.recipient_errors[0].error_code,
                          "UNKNOWN_ERROR")
+
+    def test_send_notifications_1(self):
+        """
+        - Lets try sending out two Notifications, 1 SMS & 1 Email
+        """
+        d = self.get_draft_outbox()
+        d.recipients = []
+        d.append("recipients", dict(
+            status=NotificationOutboxStatus.PENDING.value,
+            channel=self.channels.get_channel("SMS"),
+            channel_id="+966 560440266"))
+        d.append("recipients", dict(
+            status=NotificationOutboxStatus.PENDING.value,
+            channel=self.channels.get_channel("Email"),
+            channel_id="test!notifications.com"))
+
+        invoke_params_0 = self._get_channel_handler_invoke_params(d, d.recipients[0])
+        invoke_params_1 = self._get_channel_handler_invoke_params(d, d.recipients[1])
+
+        sms_channel = self.channels.get_channel("SMS")
+        sms_handler = self.get_channel_handler(sms_channel)
+        sms_handler.fnargs = invoke_params_0.keys()  # Please check frappe.call() implementation
+
+        email_channel = self.channels.get_channel("Email")
+        email_handler = self.get_channel_handler(email_channel)
+        email_handler.fnargs = invoke_params_1.keys()  # Please check frappe.call() implementation
+
+        d._channel_handlers[sms_channel] = sms_handler
+        d._channel_handlers[email_channel] = email_handler
+
+        d.before_submit()
+        d.send_pending_notifications()
+
+        sms_handler.assert_called_once_with(**invoke_params_0)
+        email_handler.assert_called_once_with(**invoke_params_1)
 
     def get_draft_outbox(self):
         d = NotificationOutbox(dict(
@@ -196,17 +238,17 @@ class TestNotificationOutbox(unittest.TestCase):
             ]))
         return d
 
-    def get_sms_handler(self) -> MagicMock:
-        sms_handler = MagicMock()
+    def get_channel_handler(self, channel: str) -> MagicMock:
+        channel_handler = MagicMock()
 
         def _inner(*args, **kwargs):
             channel_id = kwargs.get("channel_id")
-            v = self.NUMBER_VERIFICATIONS.get(channel_id)
+            v = self.CHANNEL_VERIFICATIONS.get(channel).get(channel_id)
             if isinstance(v, Exception):
                 raise v
 
-        sms_handler.side_effect = _inner
-        return sms_handler
+        channel_handler.side_effect = _inner
+        return channel_handler
 
     def _get_hooks_notification_handler(self, sms_handler=None, email_handler=None):
         sms_channel = self.channels.get_channel("sms")
@@ -222,3 +264,20 @@ class TestNotificationOutbox(unittest.TestCase):
                 return dict()
 
         return _inner
+
+    def _get_channel_handler_invoke_params(
+            self,
+            d: NotificationOutbox,
+            row: NotificationOutboxRecipientItem):
+
+        return ChannelHandlerInvokeParams(dict(
+            channel=row.get("channel"),
+            sender=row.get("sender"),
+            sender_type=row.get("sender_type"),
+            channel_id=row.get("channel_id"),
+            subject=d.get("subject"),
+            content=d.get("content"),
+            to_validate=False,
+            outbox=d.name,
+            outbox_row_name=row.get("name"),
+        ))

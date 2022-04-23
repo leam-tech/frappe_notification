@@ -1,6 +1,7 @@
 # Copyright (c) 2022, Leam Technology Systems and contributors
 # For license information, please see license.txt
 from typing import List, Dict, Callable, Union
+from enum import Enum
 
 import frappe
 from frappe.model.document import Document
@@ -14,6 +15,13 @@ from frappe_notification.utils.exceptions import FrappeNotificationException
 
 from ..notification_outbox_recipient_item.notification_outbox_recipient_item import \
     NotificationOutboxRecipientItem
+
+
+class NotificationOutboxStatus(Enum):
+    SUCCESS = "Success"
+    PENDING = "Pending"
+    FAILED = "Failed"
+    PARTIAL_SUCCESS = "Partial Success"
 
 
 class ChannelHandlerInvokeParams(frappe._dict):
@@ -56,17 +64,24 @@ class NotificationOutbox(Document):
         """ All validations kick in on_submit """
         pass
 
+    def before_submit(self):
+        for row in self.recipients:
+            row.status = NotificationOutboxStatus.PENDING.value
+
     def on_submit(self):
         self.validate_recipient_channel_ids()
         self.send_pending_notifications()
 
     def send_pending_notifications(self):
         for row in self.recipients:
+            if NotificationOutboxStatus(row.status) != NotificationOutboxStatus.PENDING:
+                continue
+
             params = self._get_channel_handler_invoke_params(row)
             frappe.enqueue(
                 self.get_channel_handler(params.channel),
                 enqueue_after_commit=True,
-                is_async=not frappe.flags.in_test,
+                now=frappe.flags.in_test,
                 **params
             )
 
