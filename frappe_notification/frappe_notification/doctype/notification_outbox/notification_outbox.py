@@ -65,6 +65,7 @@ class NotificationOutbox(Document):
         pass
 
     def before_submit(self):
+        self.status = NotificationOutboxStatus.PENDING.value
         for row in self.recipients:
             row.status = NotificationOutboxStatus.PENDING.value
 
@@ -142,6 +143,36 @@ class NotificationOutbox(Document):
             handler = frappe.get_attr(handler)
 
         return _set_handler(handler)
+
+    def update_status(self, outbox_row_name: str, status: NotificationOutboxStatus):
+        """
+        Update the OutboxItem status & the status of the Outbox itself
+        """
+        if self.docstatus != 1:
+            return
+
+        row = self.get("recipients", {"name": outbox_row_name})
+        if not row:
+            return
+
+        row = row[0]
+        if NotificationOutboxStatus(row.status) == status:
+            return
+
+        # Update row status
+        row.status = status.value
+
+        # Update Outbox Status
+        row_statuses = set([NotificationOutboxStatus(x.status) for x in self.recipients])
+        if NotificationOutboxStatus.PENDING in row_statuses:
+            self.status = NotificationOutboxStatus.PENDING.value
+        elif len(row_statuses) == 1:
+            self.status = row_statuses.pop().value
+        else:
+            self.status = NotificationOutboxStatus.PARTIAL_SUCCESS.value
+
+        self.flags.ignore_validate_update_after_submit = True
+        self.save()
 
     def _get_channel_handler_invoke_params(self, row: NotificationOutboxRecipientItem):
         return ChannelHandlerInvokeParams(dict(

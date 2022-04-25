@@ -216,6 +216,39 @@ class TestNotificationOutbox(unittest.TestCase):
         sms_handler.assert_called_once_with(**invoke_params_0)
         email_handler.assert_called_once_with(**invoke_params_1)
 
+    def test_update_status(self):
+        d = self.get_draft_outbox()
+        d.before_submit()
+        d.insert()
+        self.addCleanup(lambda: d.cancel() and d.delete())
+
+        d.db_set("docstatus", 1)
+
+        self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.PENDING)
+        for row in d.recipients:
+            self.assertEqual(NotificationOutboxStatus(row.status), NotificationOutboxStatus.PENDING)
+
+        # Update status of non-existent row
+        d.update_status("random-row", NotificationOutboxStatus.FAILED)
+        self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.PENDING)
+
+        # Update status of all rows as success
+        for row in d.recipients:
+            d.update_status(row.name, NotificationOutboxStatus.SUCCESS)
+
+        self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.SUCCESS)
+
+        # Update status of all rows as Failure
+        for row in d.recipients:
+            d.update_status(row.name, NotificationOutboxStatus.FAILED)
+
+        self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.FAILED)
+
+        # Update one row to be successfull
+        d.update_status(d.recipients[0].name, NotificationOutboxStatus.SUCCESS)
+        self.assertEqual(
+            NotificationOutboxStatus(d.status), NotificationOutboxStatus.PARTIAL_SUCCESS)
+
     def get_draft_outbox(self):
         d = NotificationOutbox(dict(
             doctype="Notification Outbox",
