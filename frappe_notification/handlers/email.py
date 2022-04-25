@@ -3,6 +3,7 @@ from frappe_notification import NotificationOutboxStatus, NotificationOutbox
 
 
 def email_handler(
+    *,
     # The channel selected, ie Telegram
     channel: str,
     # The Sender Type, for eg. TelegramBot
