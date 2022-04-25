@@ -20,6 +20,8 @@ def get_active_notification_client() -> Union[str, None]:
                 base64.b64decode(header[1])).split(":")
         elif header[0].lower() == "token":
             api_key, api_secret = header[1].split(":")
+        else:
+            raise Exception("Invalid Token")
     except BaseException:
         return None
 
