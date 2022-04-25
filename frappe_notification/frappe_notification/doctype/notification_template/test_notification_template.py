@@ -20,6 +20,7 @@ from .notification_template import (
     NotificationTemplate,
     AllowedClientNotManagedByManager,
     OnlyManagerTemplatesCanBeShared,
+    InvalidTemplateForking,
 )
 
 
@@ -265,3 +266,77 @@ class TestNotificationTemplate(unittest.TestCase):
             if recipient.channel == email_channel:
                 self.assertEqual(outbox_row.sender_type, email_sender_type)
                 self.assertEqual(outbox_row.sender, email_sender)
+
+    def test_validate_can_fork(self):
+        d = NotificationTemplate(dict(
+            doctype="Notification Template",
+            key=self.faker.first_name(),
+            lang="en",
+            content=self.faker.last_name(),
+            subject=self.faker.first_name(),
+        ))
+
+        # When the template being forked is already another fork
+        d.is_fork_of = self.templates[0].name
+        with self.assertRaises(InvalidTemplateForking):
+            d.validate_can_fork()
+
+        # When the template is created by some non-manager client
+        d.is_fork_of = None
+        d.created_by = self.clients.get_non_manager_client().name
+        with self.assertRaises(InvalidTemplateForking):
+            d.validate_can_fork()
+
+        # When no active notification-client exists
+        d.created_by = self.clients.get_manager_client().name
+        set_active_notification_client(None)
+        with self.assertRaises(NotificationClientNotFound):
+            d.validate_can_fork()
+
+        # When the creator itself is trying to fork his own template
+        set_active_notification_client(d.created_by)
+        with self.assertRaises(InvalidTemplateForking):
+            d.validate_can_fork()
+
+        # When the template being forked belongs to another manager, not the
+        # manager of current client
+        another_manager = [
+            x for x in self.clients if x.is_client_manager and x.name != d.created_by][0].name
+        set_active_notification_client(self.clients.get_clients_managed_by(another_manager)[0].name)
+        with self.assertRaises(InvalidTemplateForking):
+            d.validate_can_fork()
+
+        # valid case
+        set_active_notification_client(self.clients.get_clients_managed_by(d.created_by)[0].name)
+        self.assertTrue(d.validate_can_fork())
+
+    def test_fork(self):
+        d = NotificationTemplate(dict(
+            doctype="Notification Template",
+            key=self.faker.first_name(),
+            lang="en",
+            content=self.faker.last_name(),
+            subject=self.faker.first_name(),
+        ))
+        d.created_by = self.clients.get_manager_client().name
+        d.insert()
+        self.templates.add_document(d)
+
+        _active_client = self.clients.get_clients_managed_by(d.created_by)[0].name
+        set_active_notification_client(_active_client)
+        self.assertTrue(d.validate_can_fork())
+
+        fork_d = d.fork()
+        self.templates.add_document(fork_d)
+
+        self.assertIsInstance(fork_d, NotificationTemplate)
+        self.assertEqual(d.key, fork_d.key)
+        self.assertEqual(fork_d.is_fork_of, d.name)
+
+        # Make sure Notification Client Entry was made
+        _active_client: NotificationClient = frappe.get_doc("Notification Client", _active_client)
+        self.assertGreater(len(_active_client.get(
+            "custom_templates", dict(key=d.key, template=fork_d.name))), 0)
+
+        # tearDown start
+        _active_client.custom_templates = []

@@ -46,10 +46,20 @@ class AllowedClientNotManagedByManager(FrappeNotificationException):
             client_manager=client_manager)
 
 
+class InvalidTemplateForking(FrappeNotificationException):
+    def __init__(self, template: str, error_code: str = None, message: str = None):
+        self.error_code = error_code or "INVALID_TEMPLATE_FORKING"
+        self.message = message or frappe._("Invalid Template Forking")
+        self.data = frappe._dict(
+            notification_template=template
+        )
+
+
 class NotificationTemplate(Document):
     key: str
     subject: str
     content: str
+    is_fork_of: str
     lang: str
     last_used_on: str
     last_used_by: str
@@ -79,6 +89,65 @@ class NotificationTemplate(Document):
         self.validate_allowed_clients()
         self.validate_language_templates()
 
+    def fork(self) -> "NotificationTemplate":
+        """
+        - Validate & Fork
+        - Forking = Duplicate current template & add entry in Notification Client
+        """
+        self.validate_can_fork()
+
+        client = get_active_notification_client()
+        d = NotificationTemplate(dict(self.as_dict()))
+        d.created_by = client
+        d.is_fork_of = self.name
+        d.name = None
+        d.insert(ignore_permissions=True)
+
+        client = frappe.get_doc("Notification Client", client)
+        client.append("custom_templates", dict(key=self.key, template=d.name))
+        client.save(ignore_permissions=True)
+
+        return d
+
+    def validate_can_fork(self):
+        """
+        Forking is allowed if
+        - This is not a fork of another template
+        - This template belongs to a ClientManager who is the manager for current Client
+        """
+        if self.is_fork_of:
+            raise InvalidTemplateForking(
+                template=self.name,
+                message=frappe._("Template {0} is a fork of {1}").format(self.name, self.is_fork_of)
+            )
+
+        if not self.is_created_by_client_manager():
+            raise InvalidTemplateForking(
+                template=self.name,
+                message=frappe._("Template {0} has been created by non manager: {1}").format(
+                    self.name, self.created_by
+                )
+            )
+
+        client = get_active_notification_client()
+        if not client:
+            raise NotificationClientNotFound()
+
+        if client == self.created_by:
+            raise InvalidTemplateForking(
+                template=self.name,
+                message=frappe._("You cannot fork a template created by yourself")
+            )
+
+        client_manager = frappe.db.get_value("Notification Client", client, "managed_by")
+        if client_manager != self.created_by:
+            raise InvalidTemplateForking(
+                template=self.name,
+                message=frappe._("You can only fork templates created by your manager")
+            )
+
+        return True
+
     def validate_allowed_clients(self):
         """
         Notification Templates created_by ClientManager can only be shared with subordinate-clients
@@ -87,12 +156,7 @@ class NotificationTemplate(Document):
             return
 
         # Verify the owner is actually a ClientManager
-        is_client_manager = frappe.db.get_value(
-            "Notification Client",
-            self.created_by,
-            "is_client_manager") if self.created_by else False
-
-        if not is_client_manager:
+        if not self.is_created_by_client_manager():
             self.allowed_clients = []
             raise OnlyManagerTemplatesCanBeShared()
 
@@ -216,3 +280,14 @@ class NotificationTemplate(Document):
 
         channel: NotificationChannel = frappe.get_doc("Notification Channel", channel)
         return (channel.sender_type, channel.default_sender)
+
+    def is_created_by_client_manager(self):
+        """
+        Returns True if self.created_by is a Client Manager
+        """
+        is_client_manager = frappe.db.get_value(
+            "Notification Client",
+            self.created_by,
+            "is_client_manager") if self.created_by else False
+
+        return bool(is_client_manager)
