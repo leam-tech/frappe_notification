@@ -1,1 +1,1 @@
-from .notification_outbox import NotificationOutbox  # noqa
+from .notification_outbox import NotificationOutbox, NotificationOutboxStatus  # noqa

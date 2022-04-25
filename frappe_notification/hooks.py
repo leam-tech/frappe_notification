@@ -16,6 +16,11 @@ fixtures = [
     ]]]}
 ]
 
+notification_channel_handler = {
+    "SMS": "",
+    "Email": "",
+}
+
 # Includes in <head>
 # ------------------
 
