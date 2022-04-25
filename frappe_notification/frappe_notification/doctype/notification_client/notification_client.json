@@ -13,7 +13,8 @@
   "api_secret",
   "generate_new_secret",
   "is_client_manager",
-  "managed_by"
+  "managed_by",
+  "custom_templates"
  ],
  "fields": [
   {
@@ -66,11 +67,17 @@
    "fieldtype": "Button",
    "label": "Generate New Secret",
    "options": "generate_new_secret"
+  },
+  {
+   "fieldname": "custom_templates",
+   "fieldtype": "Table",
+   "label": "Custom Templates",
+   "options": "Notification Client Custom Template"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-19 14:16:41.064787",
+ "modified": "2022-04-25 10:43:16.672469",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Client",

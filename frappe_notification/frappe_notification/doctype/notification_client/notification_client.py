@@ -1,10 +1,14 @@
 # Copyright (c) 2022, Leam Technology Systems and contributors
 # For license information, please see license.txt
 
+from typing import List
 import frappe
 from frappe.model.document import Document
 
 from frappe_notification.utils import FrappeNotificationException
+from ..notification_client_item.notification_client_item import NotificationClientItem
+from ..notification_client_custom_template.notification_client_custom_template import \
+    NotificationClientCustomTemplate
 
 
 class InvalidManagerClient(FrappeNotificationException):
@@ -29,6 +33,15 @@ class CannotDemoteManager(FrappeNotificationException):
 
 
 class NotificationClient(Document):
+    enabled: int
+    title: str
+    url: str
+    api_key: str
+    api_secret: str
+    is_client_manager: int
+    managed_by: List[NotificationClientItem]
+    custom_templates: List[NotificationClientCustomTemplate]
+
     LEN_API_KEY = 10
     LEN_API_SECRET = 15
 
@@ -46,6 +59,7 @@ class NotificationClient(Document):
     def validate(self):
         if self.is_client_manager:
             self.managed_by = None
+            self.custom_templates = []
         else:
             self.validate_demotion()
             self.validate_manager()

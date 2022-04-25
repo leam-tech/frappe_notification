@@ -8,6 +8,7 @@
  "field_order": [
   "key",
   "lang",
+  "is_fork_of",
   "subject",
   "content",
   "last_used_on",
@@ -80,11 +81,18 @@
    "in_list_view": 1,
    "label": "Key",
    "reqd": 1
+  },
+  {
+   "fieldname": "is_fork_of",
+   "fieldtype": "Link",
+   "label": "Is Fork Of",
+   "options": "Notification Template",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-23 11:07:02.605323",
+ "modified": "2022-04-25 10:28:04.754214",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template",
