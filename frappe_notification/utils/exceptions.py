@@ -66,3 +66,10 @@ class NotificationChannelHandlerNotFound(FrappeNotificationException):
         self.message = frappe._("Notification Channel Handler not found")
         self.http_status_code = 400
         self.data = frappe._dict(channel=channel)
+
+
+class ActionRestrictedToClientManager(FrappeNotificationException):
+    def __init__(self) -> None:
+        self.error_code = "ACTION_RESTRICTED_TO_CLIENT_MANAGER_ONLY"
+        self.message = frappe._("Only Manager can perform this action")
+        self.http_status_code = 400
