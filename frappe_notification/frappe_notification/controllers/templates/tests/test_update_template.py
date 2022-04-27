@@ -1,4 +1,5 @@
 from unittest import TestCase, skip
+from unittest.mock import patch, MagicMock
 
 import frappe
 
@@ -150,3 +151,29 @@ class TestUpdateTemplate(TestCase):
         self.assertNotEqual(template_1.key, _updates.key)
         self.assertNotEqual(template_1.created_by, _updates.created_by)
         self.assertNotEqual(template_1.is_fork_of, _updates.is_fork_of)
+
+    @patch("frappe_notification.frappe_notification.controllers.templates.update_template_doc."
+           "validate_template_access")
+    def test_make_sure_validate_access_was_called(self, mock_validate_template_access: MagicMock):
+        """
+        - Login as a manager client
+        - Try updating his own template
+        """
+        manager_1 = self.clients.get_manager_client().name
+        set_active_notification_client(manager_1)
+
+        template_1 = self.templates.get_templates_created_by(manager_1)[0]
+        _updates = frappe._dict(
+            subject=frappe.mock("first_name"),
+            content=frappe.mock("last_name"),
+            lang="ar",
+        )
+
+        r = update_template(
+            template=template_1.name,
+            updates=_updates
+        )
+
+        self.assertIsInstance(r, NotificationTemplate)
+        mock_validate_template_access.assert_called_once_with(
+            template=template_1.name, ptype="update")
