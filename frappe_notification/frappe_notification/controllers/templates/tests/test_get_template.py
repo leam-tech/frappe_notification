@@ -9,7 +9,7 @@ from frappe_notification import (
     NotificationClientNotFound,
     # NotificationTemplateNotFound,
     set_active_notification_client)
-from ..get_template import get_template
+from ..get_template_doc import get_template
 
 
 class TestGetTemplate(TestCase):
@@ -62,7 +62,7 @@ class TestGetTemplate(TestCase):
         with self.assertRaises(NotificationClientNotFound):
             get_template(_template.name)
 
-    @patch("frappe_notification.frappe_notification.controllers.templates.get_template."
+    @patch("frappe_notification.frappe_notification.controllers.templates.get_template_doc."
            "validate_template_access")
     def test_make_sure_validate_access_was_called(self, mock_validate_template_access: MagicMock):
         """

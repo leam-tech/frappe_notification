@@ -1,7 +1,8 @@
 import frappe
 
 from frappe_notification import (NotificationTemplate)
-from . import validate_template_access
+
+from .utils import validate_template_access
 
 
 def get_template(template: str) -> NotificationTemplate:

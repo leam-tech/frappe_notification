@@ -3,7 +3,7 @@ from frappe_notification import (
     NotificationClientNotFound,
     get_active_notification_client)
 
-from . import _get_templates
+from .utils import _get_templates
 
 
 def get_templates():

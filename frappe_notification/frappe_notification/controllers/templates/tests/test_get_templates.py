@@ -7,7 +7,7 @@ from frappe_notification import (
     NotificationClientNotFound,
     # NotificationTemplateNotFound,
     set_active_notification_client)
-from ..get_templates import get_templates
+from ..get_templates_list import get_templates
 
 
 class TestGetTemplate(TestCase):
