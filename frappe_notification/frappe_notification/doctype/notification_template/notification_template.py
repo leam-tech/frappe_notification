@@ -101,6 +101,8 @@ class NotificationTemplate(Document):
         d.created_by = client
         d.is_fork_of = self.name
         d.name = None
+        d.allowed_clients = []
+
         d.insert(ignore_permissions=True)
 
         client = frappe.get_doc("Notification Client", client)

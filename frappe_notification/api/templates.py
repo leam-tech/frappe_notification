@@ -4,6 +4,7 @@ from frappe_notification.frappe_notification.controllers.templates import (
     update_template as _update_template,
     delete_template as _delete_template,
     create_template as _create_template,
+    fork_template as _fork_template,
 )
 from frappe_notification.utils import frappe_notification_api
 
@@ -48,3 +49,11 @@ def create_template(data: dict):
     Creates a template under the active client
     """
     return _create_template(data)
+
+
+@frappe_notification_api
+def fork_template(template: str):
+    """
+    Fork a specific template to make a copy
+    """
+    return _fork_template(template=template)
