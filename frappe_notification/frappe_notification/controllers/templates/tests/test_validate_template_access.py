@@ -9,6 +9,7 @@ from frappe_notification import (
     NotificationTemplateFixtures,
     NotificationClientNotFound,
     NotificationTemplateNotFound,
+    PermissionDenied,
     set_active_notification_client)
 
 from ..utils import validate_template_access
@@ -80,6 +81,13 @@ class TestValidateTemplateAccess(TestCase):
         self.assertIsNotNone(template)
 
         validate_template_access(template)
+        validate_template_access(template, ptype="read")
+        validate_template_access(template, ptype="update")
+        validate_template_access(template, ptype="delete")
+
+        with self.assertRaises(PermissionDenied):
+            # unknown ptype should always raise
+            validate_template_access(template, ptype="lock")
 
     def test_manager_asking_for_a_template_created_by_subordinate(self):
         """
@@ -146,6 +154,12 @@ class TestValidateTemplateAccess(TestCase):
         set_active_notification_client(client_m1)
         validate_template_access(template_m1.name)
 
+        with self.assertRaises(PermissionDenied):
+            validate_template_access(template_m1.name, ptype="update")
+
+        with self.assertRaises(PermissionDenied):
+            validate_template_access(template_m1.name, ptype="delete")
+
     def test_subordinate_asking_for_template_made_by_manager_denied(self):
         """
         A Subordinate asking for a Template made by his manager which is denied to him
@@ -177,6 +191,8 @@ class TestValidateTemplateAccess(TestCase):
 
         set_active_notification_client(client_m1)
         validate_template_access(template_c1.name)
+        validate_template_access(template_c1.name, ptype="update")
+        validate_template_access(template_c1.name, ptype="delete")
 
     def test_subordinate_asking_for_colleague_subordinate_template(self):
         """

@@ -26,6 +26,15 @@ class FrappeNotificationException(Exception):
         )
 
 
+class PermissionDenied(FrappeNotificationException):
+    def __init__(self, message: str = None, **kwargs):
+        self.error_code = "PERMISSION_DENIED"
+        self.http_status_code = 403
+        self.data = frappe._dict(
+            **kwargs
+        )
+
+
 class RecipientErrors(FrappeNotificationException):
     def __init__(self, recipient_errors: List[FrappeNotificationException]) -> None:
         self.error_code = "NOTIFICATION_RECEIVER_ERRORS"

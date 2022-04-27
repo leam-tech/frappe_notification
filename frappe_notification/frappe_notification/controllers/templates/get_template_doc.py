@@ -11,6 +11,6 @@ def get_template(template: str) -> NotificationTemplate:
     - Return NotificationTemplate
     """
 
-    validate_template_access(template=template)
+    validate_template_access(template=template, ptype="read")
 
     return frappe.get_doc("Notification Template", template)

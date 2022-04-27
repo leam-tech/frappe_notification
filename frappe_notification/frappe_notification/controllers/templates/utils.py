@@ -4,6 +4,7 @@ import frappe
 from frappe_notification import (
     NotificationTemplateNotFound,
     NotificationClientNotFound,
+    PermissionDenied,
     get_active_notification_client)
 
 
@@ -50,9 +51,10 @@ def _get_templates(client: str, conditions: List[str] = [], values=dict()):
     return r
 
 
-def validate_template_access(template: str, client: Optional[str] = None):
+def validate_template_access(template: str, ptype: str = "read", client: Optional[str] = None):
     """
     Verify if the template specified is either created by the client or belongs to Client's Manager
+    For Updates & Deletes, only the owner can do it (only Manager if distributed)
 
     Raises:
         NotificationTemplateNotFound: When permission is denied or template do not exist
@@ -77,3 +79,22 @@ def validate_template_access(template: str, client: Optional[str] = None):
 
     if not len(r):
         raise NotificationTemplateNotFound()
+
+    if ptype == "read":
+        return
+    elif ptype in ("update", "delete"):
+        if r[0].created_by == client:
+            pass
+        else:
+            raise PermissionDenied(
+                message=frappe._("Only the owner can {} the Template".format(ptype)),
+                doctype="Notification Template",
+                name=template,
+                active_client=client,
+                template_owner=r[0].created_by
+            )
+    else:
+        raise PermissionDenied(
+            message=frappe._("Unknown permission type"),
+            ptype=ptype
+        )

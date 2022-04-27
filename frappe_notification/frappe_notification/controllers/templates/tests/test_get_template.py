@@ -78,4 +78,4 @@ class TestGetTemplate(TestCase):
 
         t = get_template(_template.name)
         self.assertIsInstance(t, NotificationTemplate)
-        mock_validate_template_access.assert_called_once_with(template=_template.name)
+        mock_validate_template_access.assert_called_once_with(template=_template.name, ptype="read")
