@@ -3,6 +3,7 @@ from frappe_notification.frappe_notification.controllers.templates import (
     get_templates as _get_templates,
     update_template as _update_template,
     delete_template as _delete_template,
+    create_template as _create_template,
 )
 from frappe_notification.utils import frappe_notification_api
 
@@ -39,3 +40,11 @@ def delete_template(template: str):
     Delete a specific template
     """
     return _delete_template(template=template)
+
+
+@frappe_notification_api
+def create_template(data: dict):
+    """
+    Creates a template under the active client
+    """
+    return _create_template(data)
