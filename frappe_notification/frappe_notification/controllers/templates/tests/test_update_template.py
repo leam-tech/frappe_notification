@@ -7,6 +7,7 @@ from frappe_notification import (
     NotificationTemplate,
     NotificationClientFixtures,
     NotificationTemplateFixtures,
+    NotificationClientNotFound,
     set_active_notification_client,
 )
 
@@ -28,7 +29,13 @@ class TestUpdateTemplate(TestCase):
     def setUp(self):
         self.templates.setUp()
 
+        frappe.set_user("Guest")
+        set_active_notification_client(None)
+
     def tearDown(self) -> None:
+        frappe.set_user("Administrator")
+        set_active_notification_client(None)
+
         self.templates.tearDown()
 
     def test_simple_update(self):
@@ -177,3 +184,12 @@ class TestUpdateTemplate(TestCase):
         self.assertIsInstance(r, NotificationTemplate)
         mock_validate_template_access.assert_called_once_with(
             template=template_1.name, ptype="update")
+
+    def test_admin(self):
+        """
+        Admin will get ClientNotFound
+        """
+        template = self.templates[0].name
+
+        with self.assertRaises(NotificationClientNotFound):
+            update_template(template, dict(subject="Hello!"))
