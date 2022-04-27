@@ -1,6 +1,7 @@
 from frappe_notification.frappe_notification.controllers.templates import (
     get_template as _get_template,
-    get_templates as _get_templates
+    get_templates as _get_templates,
+    update_template as _update_template,
 )
 from frappe_notification.utils import frappe_notification_api
 
@@ -20,3 +21,12 @@ def get_templates():
     Please note only a handful of fields on each template will be returned
     """
     return _get_templates()
+
+
+@frappe_notification_api()
+def update_template(template: str, updates: dict):
+    """
+    Update a template's contents
+    Please note that only a subset of fields can be edited
+    """
+    return _update_template(template=template, updates=updates)
