@@ -19,7 +19,6 @@ def frappe_notification_api(only_client_managers=False, allow_non_clients=False)
         ActionRestrictedToClientManager)
 
     def _inner_0(fn):
-        frappe.whitelist(allow_guest=True)(fn)
 
         @wraps(fn)
         def _inner_1(*args, **kwargs):
@@ -43,6 +42,7 @@ def frappe_notification_api(only_client_managers=False, allow_non_clients=False)
                     traceback=frappe.get_traceback()
                 )
 
+        frappe.whitelist(allow_guest=True)(_inner_1)
         return _inner_1
 
     return _inner_0

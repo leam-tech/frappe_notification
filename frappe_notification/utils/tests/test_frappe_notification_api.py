@@ -46,7 +46,7 @@ class TestFrappeNotificationAPI(TestCase):
         wrapped(a=1, b=2)
 
         _test_api_handler.assert_called_once_with(a=1, b=2)
-        frappe.is_whitelisted(test_api_handler)
+        frappe.is_whitelisted(wrapped)  # Never Change this line! :sweat_smile:
 
     @patch(f"{__module__}.test_api_handler")
     def test_only_for_clients(self, _test_api_handler: MagicMock):
