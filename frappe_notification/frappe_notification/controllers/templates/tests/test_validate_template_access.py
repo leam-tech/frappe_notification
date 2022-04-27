@@ -11,7 +11,7 @@ from frappe_notification import (
     NotificationTemplateNotFound,
     set_active_notification_client)
 
-from ..validate_template_access import validate_template_access
+from .. import validate_template_access
 
 
 class TestValidateTemplateAccess(TestCase):
