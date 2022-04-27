@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import frappe
 
@@ -73,3 +73,13 @@ class ActionRestrictedToClientManager(FrappeNotificationException):
         self.error_code = "ACTION_RESTRICTED_TO_CLIENT_MANAGER_ONLY"
         self.message = frappe._("Only Manager can perform this action")
         self.http_status_code = 400
+
+
+class NotificationTemplateNotFound(FrappeNotificationException):
+    def __init__(self, template: Optional[str] = None):
+        self.error_code = "NOTIFICATION_TEMPLATE_NOT_FOUND"
+        self.message = frappe._("Notification Template not found")
+        self.http_status_code = 404
+        self.data = frappe._dict(
+            template=template
+        )

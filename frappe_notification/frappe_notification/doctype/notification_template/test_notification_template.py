@@ -5,6 +5,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from faker import Faker
+from typing import List
 
 import frappe
 from frappe_testing import TestFixture
@@ -62,6 +63,9 @@ class NotificationTemplateFixtures(TestFixture):
             self, manager: NotificationClient,
             clients: NotificationClientFixtures):
         pass
+
+    def get_templates_created_by(self, client: str) -> List[NotificationTemplate]:
+        return [x for x in self if x.created_by == client]
 
 
 class TestNotificationTemplate(unittest.TestCase):
