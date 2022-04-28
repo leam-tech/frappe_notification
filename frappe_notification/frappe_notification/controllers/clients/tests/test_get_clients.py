@@ -10,7 +10,7 @@ from frappe_notification import (
 from ..get_clients import get_notification_clients
 
 
-class TestCreateClient(TestCase):
+class TestGetClients(TestCase):
     clients = NotificationClientFixtures()
 
     @classmethod
