@@ -230,7 +230,7 @@ class NotificationTemplate(Document):
             doctype="Notification Outbox",
             subject=subject,
             content=content,
-            client=get_active_notification_client(),
+            notification_client=get_active_notification_client(),
             recipients=[
                 dict(
                     channel=x.get("channel"),

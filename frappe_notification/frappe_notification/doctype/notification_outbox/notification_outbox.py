@@ -79,8 +79,11 @@ class NotificationOutbox(Document):
                 continue
 
             params = self._get_channel_handler_invoke_params(row)
+            fn = self.get_channel_handler(params.channel)
+            fn.fnargs = params.keys()  # please check frappe.call implementation
+
             frappe.enqueue(
-                self.get_channel_handler(params.channel),
+                fn,
                 enqueue_after_commit=True,
                 now=frappe.flags.in_test,
                 **params
@@ -136,11 +139,14 @@ class NotificationOutbox(Document):
             return _set_handler(NotificationChannelDisabled(channel=channel))
 
         handler = frappe.get_hooks(HOOK_NOTIFICATION_CHANNEL_HANDLER, dict()).get(channel)
-        if not handler:
-            return _set_handler(NotificationChannelHandlerNotFound(channel=channel))
 
+        if isinstance(handler, (list, tuple)):
+            handler = handler[0]
         if isinstance(handler, str):
             handler = frappe.get_attr(handler)
+
+        if not handler:
+            return _set_handler(NotificationChannelHandlerNotFound(channel=channel))
 
         return _set_handler(handler)
 
@@ -172,7 +178,7 @@ class NotificationOutbox(Document):
             self.status = NotificationOutboxStatus.PARTIAL_SUCCESS.value
 
         self.flags.ignore_validate_update_after_submit = True
-        self.save()
+        self.save(ignore_permissions=True)
 
     def _get_channel_handler_invoke_params(self, row: NotificationOutboxRecipientItem):
         return ChannelHandlerInvokeParams(dict(
