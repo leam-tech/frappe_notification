@@ -2,13 +2,16 @@ import frappe
 from typing import Union
 
 
+AUTH_HEADER = "X-Notifications-Token"
+
+
 def get_active_notification_client() -> Union[str, None]:
     import base64
 
     if getattr(frappe.local, "notification_client", None):
         return frappe.local.notification_client
 
-    header = frappe.safe_decode(frappe.get_request_header("Authorization", str())) \
+    header = frappe.safe_decode(frappe.get_request_header(AUTH_HEADER, str())) \
         if frappe.request else None
     if not header:
         return None

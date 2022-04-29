@@ -54,7 +54,9 @@ class TestFrappeNotificationAPI(TestCase):
         When allow_non_clients is False, make sure errors are raised when not logged in
         """
         wrapped = frappe_notification_api(allow_non_clients=False)(test_api_handler)
-        r = wrapped(a=1, b=2)
+        wrapped(a=1, b=2)
+        r = frappe.local.response
+
         _test_api_handler.assert_not_called()
 
         exc = NotificationClientNotFound()
@@ -76,7 +78,9 @@ class TestFrappeNotificationAPI(TestCase):
         set_active_notification_client(self.clients.get_non_manager_client().name)
 
         wrapped = frappe_notification_api(only_client_managers=True)(test_api_handler)
-        r = wrapped(a=1, b=2)
+        wrapped(a=1, b=2)
+
+        r = frappe.local.response
         _test_api_handler.assert_not_called()
 
         exc = ActionRestrictedToClientManager()

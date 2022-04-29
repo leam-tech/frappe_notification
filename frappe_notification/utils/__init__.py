@@ -22,6 +22,8 @@ def frappe_notification_api(only_client_managers=False, allow_non_clients=False)
 
         @wraps(fn)
         def _inner_1(*args, **kwargs):
+            r = dict()
+            http_status_code = 200
             try:
                 client: str = get_active_notification_client()
                 if not allow_non_clients and not client:
@@ -30,17 +32,21 @@ def frappe_notification_api(only_client_managers=False, allow_non_clients=False)
                         "Notification Client", client, "is_client_manager"):
                     raise ActionRestrictedToClientManager()
 
-                return fn(*args, **kwargs)
+                kwargs.pop("cmd", None)
+                r = fn(*args, **kwargs)
             except FrappeNotificationException as e:
-                frappe.local.response['http_status_code'] = e.http_status_code
-                return e.as_dict()
+                http_status_code = e.http_status_code
+                r = e.as_dict()
             except BaseException as e:
-                frappe.local.response['http_status_code'] = 500
-                return frappe._dict(
+                http_status_code = 500
+                r = frappe._dict(
                     error_code="UNKNOWN_SERVER_ERROR",
                     message=frappe._("Unknown Server Error occurred: {0}").format(str(e)),
                     traceback=frappe.get_traceback()
                 )
+
+            frappe.local.response['http_status_code'] = http_status_code
+            frappe.local.response.update(r)
 
         frappe.whitelist(allow_guest=True)(_inner_1)
         return _inner_1
