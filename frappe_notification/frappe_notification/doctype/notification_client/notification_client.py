@@ -92,6 +92,11 @@ class NotificationClient(Document):
 
     @frappe.whitelist()
     def generate_new_secret(self):
-        self.api_secret = frappe.generate_hash(length=self.LEN_API_SECRET)
-        frappe.msgprint(frappe._("Secret Key Generated: {0}").format(self.api_key))
-        return self.save()
+        api_secret = frappe.generate_hash(length=self.LEN_API_SECRET)
+        self.api_secret = api_secret
+
+        self.save()
+
+        frappe.msgprint(frappe._("Secret Key Generated: {0}").format(api_secret))
+
+        return self
