@@ -45,6 +45,9 @@ def frappe_notification_api(only_client_managers=False, allow_non_clients=False)
                     traceback=frappe.get_traceback()
                 )
 
+            status = "SUCCESS" if http_status_code == 200 else "FAILED"
+
+            frappe.local.response["_status"] = status
             frappe.local.response['http_status_code'] = http_status_code
             frappe.local.response.update(r)
 

@@ -14,7 +14,8 @@ def get_template(template: str):
     """
     Get a single Template Doc identifiable by args-template
     """
-    return _get_template(template=template)
+    t = _get_template(template=template)
+    return t.as_dict()
 
 
 @frappe_notification_api()
@@ -32,7 +33,8 @@ def update_template(template: str, updates: dict):
     Update a template's contents
     Please note that only a subset of fields can be edited
     """
-    return _update_template(template=template, updates=updates)
+    t = _update_template(template=template, updates=updates)
+    return t.as_dict()
 
 
 @frappe_notification_api()
@@ -43,17 +45,19 @@ def delete_template(template: str):
     return _delete_template(template=template)
 
 
-@frappe_notification_api
+@frappe_notification_api()
 def create_template(data: dict):
     """
     Creates a template under the active client
     """
-    return _create_template(data)
+    t = _create_template(data)
+    return t.as_dict()
 
 
-@frappe_notification_api
+@frappe_notification_api()
 def fork_template(template: str):
     """
     Fork a specific template to make a copy
     """
-    return _fork_template(template=template)
+    t = _fork_template(template=template)
+    return t.as_dict()
