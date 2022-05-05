@@ -24,7 +24,7 @@ def get_templates():
     Return a list of Templates
     Please note only a handful of fields on each template will be returned
     """
-    return _get_templates()
+    return dict(templates=_get_templates())
 
 
 @frappe_notification_api()

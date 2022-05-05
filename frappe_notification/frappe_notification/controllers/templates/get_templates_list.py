@@ -1,4 +1,4 @@
-
+from typing import List
 from frappe_notification import (
     NotificationClientNotFound,
     get_active_notification_client)
@@ -6,7 +6,7 @@ from frappe_notification import (
 from .utils import _get_templates
 
 
-def get_templates():
+def get_templates() -> List[dict]:
     """
     Gets a list of Templates that the active client can access
     """
