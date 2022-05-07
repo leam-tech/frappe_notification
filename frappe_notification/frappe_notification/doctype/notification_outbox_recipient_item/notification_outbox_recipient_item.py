@@ -4,5 +4,11 @@
 # import frappe
 from frappe.model.document import Document
 
+
 class NotificationOutboxRecipientItem(Document):
-	pass
+    channel: str
+    status: str
+    channel_id: str
+    time_sent: str
+    sender_type: str
+    sender: str

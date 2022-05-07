@@ -5,8 +5,6 @@
 from frappe.model.document import Document
 
 
-class NotificationChannel(Document):
-    enabled: int
-    title: str
-    sender_type: str
-    default_sender: str
+class NotificationClientCustomTemplate(Document):
+    key: str
+    template: str

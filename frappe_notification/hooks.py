@@ -16,6 +16,11 @@ fixtures = [
     ]]]}
 ]
 
+notification_channel_handler = {
+    "SMS": "frappe_notification.handlers.sms_handler",
+    "Email": "frappe_notification.handlers.email_handler",
+}
+
 # Includes in <head>
 # ------------------
 

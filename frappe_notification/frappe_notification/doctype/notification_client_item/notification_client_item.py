@@ -6,4 +6,4 @@ from frappe.model.document import Document
 
 
 class NotificationClientItem(Document):
-    pass
+    notification_client: str

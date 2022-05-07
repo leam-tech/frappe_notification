@@ -1,15 +1,12 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2022-04-16 21:18:14.524016",
+ "creation": "2022-04-21 13:53:39.597807",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "channel",
-  "status",
-  "channel_id",
-  "time_sent",
   "sender_type",
   "sender"
  ],
@@ -23,48 +20,33 @@
    "reqd": 1
   },
   {
-   "fieldname": "status",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Status",
-   "options": "Success\nFailed\nPending",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "channel_id",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Channel ID",
-   "reqd": 1
-  },
-  {
-   "fieldname": "time_sent",
-   "fieldtype": "Datetime",
-   "label": "Time Sent",
-   "read_only": 1
-  },
-  {
+   "fetch_from": "channel.sender_type",
+   "fetch_if_empty": 1,
    "fieldname": "sender_type",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Sender Type",
-   "options": "DocType"
+   "options": "DocType",
+   "reqd": 1
   },
   {
+   "fetch_from": "channel.sender",
+   "fetch_if_empty": 1,
    "fieldname": "sender",
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
    "label": "Sender",
-   "options": "sender_type"
+   "options": "sender_type",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-04-22 13:49:58.451075",
+ "modified": "2022-04-21 13:56:22.845375",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
- "name": "Notification Outbox Recipient Item",
+ "name": "Notification Template Sender Item",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
