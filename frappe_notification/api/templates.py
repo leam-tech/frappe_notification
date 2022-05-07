@@ -1,3 +1,4 @@
+from typing import List
 from frappe_notification.frappe_notification.controllers.templates import (
     get_template as _get_template,
     get_templates as _get_templates,
@@ -5,8 +6,25 @@ from frappe_notification.frappe_notification.controllers.templates import (
     delete_template as _delete_template,
     create_template as _create_template,
     fork_template as _fork_template,
+    send_notification as _send_notification
 )
 from frappe_notification.utils import frappe_notification_api
+
+
+@frappe_notification_api()
+def send_notification(
+        template_key: str,
+        context: dict,
+        recipients: List[dict]):
+    """
+    Send out the notification to recipients
+    """
+    t = _send_notification(
+        context=context,
+        template_key=template_key,
+        recipients=recipients
+    )
+    return t.as_dict()
 
 
 @frappe_notification_api()
