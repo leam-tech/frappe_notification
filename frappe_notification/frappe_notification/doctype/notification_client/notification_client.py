@@ -81,9 +81,9 @@ class NotificationClient(Document):
             return
 
         dependent_clients = frappe.get_all(
-            "Notification Client", fields=[
-                "name", "title"], filters={
-                "managed_by": self.name})
+            "Notification Client",
+            fields=["name", "title"],
+            filters={"managed_by": self.name})
 
         if not len(dependent_clients):
             return

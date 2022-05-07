@@ -22,21 +22,21 @@ class NotificationClientFixtures(TestFixture):
         client_managers = ["ABC", "XYZ"]
         clients = ["A", "B", "C"]
 
-        for i in range(len(client_managers)):
+        for _manager in client_managers:
             manager = frappe.new_doc("Notification Client")
             manager.update(dict(
                 is_client_manager=1,
-                title=client_managers[i],
+                title=_manager,
                 url=self.faker.url(),
             ))
             manager.insert()
             self.add_document(manager)
 
-            for j in range(len(clients)):
+            for _client in clients:
                 client = frappe.new_doc("Notification Client")
                 client.update(dict(
                     managed_by=manager.name,
-                    title=clients[j],
+                    title=_client,
                     url=self.faker.url(),
                 ))
                 client.insert()

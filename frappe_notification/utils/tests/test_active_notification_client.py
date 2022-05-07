@@ -44,7 +44,7 @@ class TestGetActiveNotificationClient(TestCase):
         return f"{api_key}:{api_secret}"
 
     @patch_get_request_header
-    def test_basic_auth_valid(self, mock_get_request_header):
+    def test_basic_auth_valid(self, mock_get_request_header: MagicMock):
         client = self.clients[0]
 
         mock_get_request_header.return_value = f"Basic {self.get_basic_token(client)}"
@@ -53,7 +53,7 @@ class TestGetActiveNotificationClient(TestCase):
         self.assertEqual(client.name, r)
 
     @patch_get_request_header
-    def test_basic_auth_invalid(self, mock_get_request_header):
+    def test_basic_auth_invalid(self, mock_get_request_header: MagicMock):
         client = self.clients[0]
 
         mock_get_request_header.return_value = f"Basic a{self.get_basic_token(client)}"
@@ -71,7 +71,7 @@ class TestGetActiveNotificationClient(TestCase):
         self.assertEqual(client.name, r)
 
     @patch_get_request_header
-    def test_token_auth_invalid(self, mock_get_request_header):
+    def test_token_auth_invalid(self, mock_get_request_header: MagicMock):
         client = self.clients[0]
 
         mock_get_request_header.return_value = f"Token a{self.get_token(client)}"
@@ -80,7 +80,7 @@ class TestGetActiveNotificationClient(TestCase):
         self.assertEqual(r, None)
 
     @patch_get_request_header
-    def test_set_active_client(self, mock_get_request_header):
+    def test_set_active_client(self, mock_get_request_header: MagicMock):
         client = self.clients[0]
         mock_get_request_header.return_value = None
 

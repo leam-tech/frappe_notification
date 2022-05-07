@@ -1,3 +1,4 @@
 # frappe -- https://github.com/frappe/frappe is installed via 'bench init'
 # frappe_telegram -- https://github.com/leam-tech/frappe_telegram
 # frappe_testing -- https://github.com/leam-tech/frappe_testing
+# renovation_core -- https://github.com/leam-tech/renovation_core
