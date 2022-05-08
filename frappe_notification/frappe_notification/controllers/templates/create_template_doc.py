@@ -1,8 +1,7 @@
 import frappe
-from frappe_notification import (
-    NotificationTemplate,
-    NotificationClientNotFound,
-    get_active_notification_client)
+from frappe_notification import (NotificationTemplate,
+                                 NotificationClientNotFound,
+                                 get_active_notification_client)
 
 
 def create_template(data: dict) -> NotificationTemplate:
