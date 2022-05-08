@@ -8,11 +8,16 @@ from frappe_notification import (
     get_active_notification_client)
 
 
-def _get_templates(client: str, conditions: List[str] = [], values=dict()):
+def _get_templates(client: str, conditions: Optional[List[str]] = None,
+                   values: Optional[dict] = None):
     """
     An internal _get_templates function which handles template permissions
     Pass the conditions with care!
     """
+    if values is None:
+        values = {}
+    if conditions is None:
+        conditions = []
     managed_by = frappe.db.get_value("Notification Client", client, "managed_by")
 
     values = dict(
