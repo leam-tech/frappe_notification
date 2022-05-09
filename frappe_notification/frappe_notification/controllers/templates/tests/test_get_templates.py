@@ -10,7 +10,7 @@ from frappe_notification import (
 from ..get_templates_list import get_templates
 
 
-class TestGetTemplate(TestCase):
+class TestGetTemplates(TestCase):
     clients = NotificationClientFixtures()
     templates = NotificationTemplateFixtures()
 
