@@ -60,7 +60,8 @@ def delete_template(template: str):
     """
     Delete a specific template
     """
-    return _delete_template(template=template)
+    _delete_template(template=template)
+    return dict()
 
 
 @frappe_notification_api()
