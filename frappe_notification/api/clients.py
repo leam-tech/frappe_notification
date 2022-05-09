@@ -19,11 +19,11 @@ def create_notification_client(data: dict):
 
 
 @frappe_notification_api(only_client_managers=True)
-def update_notification_client(client: str, updates: dict):
+def update_notification_client(client: str, data: dict):
     """
     Update a Notification Client under a Manager
     """
-    client = _update_notification_client(client=client, updates=updates)
+    client = _update_notification_client(client=client, data=data)
     return client.as_dict()
 
 

@@ -39,7 +39,7 @@ class TestUpdateClient(TestCase):
             url=frappe.mock("url")
         )
 
-        r = update_notification_client(client=client_1, updates=_updates)
+        r = update_notification_client(client=client_1, data=_updates)
         self.assertIsInstance(r, NotificationClient)
 
         self.assertEqual(r.title, _updates.title)
@@ -86,7 +86,7 @@ class TestUpdateClient(TestCase):
             api_secret="B",
             managed_by=manager_2
         )
-        r = update_notification_client(client=client, updates=_data)
+        r = update_notification_client(client=client, data=_data)
 
         self.assertNotEqual(_data.api_key, r.api_key)
         self.assertNotEqual(_data.api_secret, r.api_secret)
