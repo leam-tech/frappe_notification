@@ -43,6 +43,7 @@ class DuplicateException(FrappeNotificationException):
 class PermissionDenied(FrappeNotificationException):
     def __init__(self, message: str = None, **kwargs):
         self.error_code = "PERMISSION_DENIED"
+        self.message = message
         self.http_status_code = 403
         self.data = frappe._dict(
             **kwargs
