@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import frappe
 
@@ -23,6 +23,30 @@ class FrappeNotificationException(Exception):
             message=self.message,
             error_code=self.error_code,
             **self.data,
+        )
+
+
+class ValidationError(FrappeNotificationException):
+    def __init__(self, message: str):
+        self.error_code = "VALIDATION_ERROR"
+        self.message = message or frappe._("Validation Error")
+        self.data = dict()
+
+
+class DuplicateException(FrappeNotificationException):
+    def __init__(self, message: str):
+        self.error_code = "DUPLICATE_EXCEPTION"
+        self.message = message or frappe._("Duplication Error")
+        self.data = dict()
+
+
+class PermissionDenied(FrappeNotificationException):
+    def __init__(self, message: str = None, **kwargs):
+        self.error_code = "PERMISSION_DENIED"
+        self.message = message
+        self.http_status_code = 403
+        self.data = frappe._dict(
+            **kwargs
         )
 
 
@@ -66,3 +90,20 @@ class NotificationChannelHandlerNotFound(FrappeNotificationException):
         self.message = frappe._("Notification Channel Handler not found")
         self.http_status_code = 400
         self.data = frappe._dict(channel=channel)
+
+
+class ActionRestrictedToClientManager(FrappeNotificationException):
+    def __init__(self) -> None:
+        self.error_code = "ACTION_RESTRICTED_TO_CLIENT_MANAGER_ONLY"
+        self.message = frappe._("Only Manager can perform this action")
+        self.http_status_code = 400
+
+
+class NotificationTemplateNotFound(FrappeNotificationException):
+    def __init__(self, template: Optional[str] = None):
+        self.error_code = "NOTIFICATION_TEMPLATE_NOT_FOUND"
+        self.message = frappe._("Notification Template not found")
+        self.http_status_code = 404
+        self.data = frappe._dict(
+            template=template
+        )

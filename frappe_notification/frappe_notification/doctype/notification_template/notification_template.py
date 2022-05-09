@@ -101,6 +101,8 @@ class NotificationTemplate(Document):
         d.created_by = client
         d.is_fork_of = self.name
         d.name = None
+        d.allowed_clients = []
+
         d.insert(ignore_permissions=True)
 
         client = frappe.get_doc("Notification Client", client)
@@ -228,7 +230,7 @@ class NotificationTemplate(Document):
             doctype="Notification Outbox",
             subject=subject,
             content=content,
-            client=get_active_notification_client(),
+            notification_client=get_active_notification_client(),
             recipients=[
                 dict(
                     channel=x.get("channel"),

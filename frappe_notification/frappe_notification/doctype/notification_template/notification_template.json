@@ -53,7 +53,8 @@
    "fieldtype": "Link",
    "label": "Created By",
    "options": "Notification Client",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "default": "en",
@@ -92,7 +93,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-25 10:28:04.754214",
+ "modified": "2022-04-26 16:35:51.442419",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template",

@@ -6,13 +6,13 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "language",
+  "lang",
   "subject",
   "content"
  ],
  "fields": [
   {
-   "fieldname": "language",
+   "fieldname": "lang",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Language",
@@ -22,18 +22,20 @@
   {
    "fieldname": "subject",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Subject"
   },
   {
    "fieldname": "content",
    "fieldtype": "Text",
+   "in_list_view": 1,
    "label": "Content"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-04-21 12:44:54.819911",
+ "modified": "2022-05-05 05:58:53.523862",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Template Language Item",

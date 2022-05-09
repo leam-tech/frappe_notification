@@ -31,12 +31,13 @@ def email_handler(
 
     outbox: NotificationOutbox = frappe.get_doc("Notification Outbox", outbox)
     try:
-        frappe.sendmail(
-            recipients=[channel_id],
-            subject=subject,
-            content=content,
-            sender=sender,
-        )
+        if not frappe.flags.in_test:
+            frappe.sendmail(
+                recipients=[channel_id],
+                subject=subject,
+                content=content,
+                sender=sender,
+            )
 
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
     except BaseException:
