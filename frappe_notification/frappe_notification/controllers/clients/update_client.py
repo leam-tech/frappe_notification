@@ -11,7 +11,7 @@ def update_notification_client(client: str, data: dict) -> NotificationClient:
     """
     validate_client_access(client=client)
 
-    _fields = ["title", "url"]
+    _fields = ["title", "url", "enabled"]
     data = frappe._dict({
         k: data.get(k)
         for k in _fields
