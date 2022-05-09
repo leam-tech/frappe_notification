@@ -1,6 +1,7 @@
 import frappe
 from frappe_notification import (NotificationTemplate,
                                  NotificationClientNotFound,
+                                 ValidationError,
                                  get_active_notification_client)
 
 
@@ -34,6 +35,9 @@ def create_template(data: dict) -> NotificationTemplate:
     if not is_manager:
         doc.allowed_clients = []
 
-    doc.insert(ignore_permissions=True)
+    try:
+        doc.insert(ignore_permissions=True)
+    except frappe.exceptions.ValidationError as e:
+        raise ValidationError(str(e))
 
     return doc

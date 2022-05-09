@@ -26,6 +26,13 @@ class FrappeNotificationException(Exception):
         )
 
 
+class ValidationError(FrappeNotificationException):
+    def __init__(self, message: str):
+        self.error_code = "VALIDATION_ERROR"
+        self.message = message or frappe._("Validation Error")
+        self.data = dict()
+
+
 class PermissionDenied(FrappeNotificationException):
     def __init__(self, message: str = None, **kwargs):
         self.error_code = "PERMISSION_DENIED"

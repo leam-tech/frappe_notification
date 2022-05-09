@@ -1,4 +1,5 @@
 import frappe
+from frappe_notification import ValidationError
 from .utils import validate_template_access
 
 
@@ -18,6 +19,9 @@ def update_template(template: str, updates: dict):
 
     d = frappe.get_doc("Notification Template", template)
     d.update(updates)
-    d.save(ignore_permissions=True)
+    try:
+        d.save(ignore_permissions=True)
+    except frappe.exceptions.ValidationError as e:
+        raise ValidationError(str(e))
 
     return d
