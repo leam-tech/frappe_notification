@@ -88,9 +88,7 @@ def validate_template_access(template: str, ptype: str = "read", client: Optiona
     if ptype == "read":
         return
     elif ptype in ("update", "delete"):
-        if r[0].created_by == client:
-            pass
-        else:
+        if r[0].created_by != client:
             raise PermissionDenied(
                 message=frappe._("Only the owner can {} the Template".format(ptype)),
                 doctype="Notification Template",
