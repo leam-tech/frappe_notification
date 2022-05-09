@@ -32,6 +32,9 @@ def sms_handler(
     assert sender is None
 
     if to_validate:
+        if frappe.flags.in_test:
+            # No validations in_test
+            return
         try:
             validate_receiver_nos([channel_id])
         except BaseException:
@@ -45,7 +48,8 @@ def sms_handler(
 
     outbox: NotificationOutbox = frappe.get_doc("Notification Outbox", outbox)
     try:
-        send_sms([channel_id], msg=content, success_msg=False)
+        if not frappe.flags.in_test:
+            send_sms([channel_id], msg=content, success_msg=False)
 
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
     except BaseException:
