@@ -33,6 +33,13 @@ class ValidationError(FrappeNotificationException):
         self.data = dict()
 
 
+class DuplicateException(FrappeNotificationException):
+    def __init__(self, message: str):
+        self.error_code = "DUPLICATE_EXCEPTION"
+        self.message = message or frappe._("Duplication Error")
+        self.data = dict()
+
+
 class PermissionDenied(FrappeNotificationException):
     def __init__(self, message: str = None, **kwargs):
         self.error_code = "PERMISSION_DENIED"

@@ -1,7 +1,7 @@
 import frappe
 from frappe_notification import (NotificationTemplate,
                                  NotificationClientNotFound,
-                                 ValidationError,
+                                 ValidationError, DuplicateException,
                                  get_active_notification_client)
 
 
@@ -39,5 +39,9 @@ def create_template(data: dict) -> NotificationTemplate:
         doc.insert(ignore_permissions=True)
     except frappe.exceptions.ValidationError as e:
         raise ValidationError(str(e))
+    except frappe.exceptions.DuplicateEntryError:
+        raise DuplicateException(frappe._(
+            "Please choose a different template key"
+            " for the one you have specified is taken already"))
 
     return doc

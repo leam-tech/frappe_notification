@@ -8,6 +8,7 @@ from frappe_notification import (
     NotificationTemplateFixtures,
     NotificationClientNotFound,
     set_active_notification_client,
+    DuplicateException,
 )
 
 from ..create_template_doc import create_template
@@ -79,3 +80,17 @@ class TestCreateTemplate(TestCase):
         frappe.set_user("Administrator")
         with self.assertRaises(NotificationClientNotFound):
             create_template(dict(subject="A"))
+
+    def test_duplicate_key(self):
+        manager_1 = self.clients.get_manager_client().name
+        set_active_notification_client(manager_1)
+        template = self.templates.get_templates_created_by(manager_1)[0]
+
+        data = frappe._dict(
+            key=template.key,
+            subject=frappe.mock("first_name"),
+            content=frappe.mock("last_name"),
+            lang="ar",)
+
+        with self.assertRaises(DuplicateException):
+            create_template(data=data)
