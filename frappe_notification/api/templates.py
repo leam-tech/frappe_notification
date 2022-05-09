@@ -46,12 +46,12 @@ def get_templates():
 
 
 @frappe_notification_api()
-def update_template(template: str, updates: dict):
+def update_template(template: str, data: dict):
     """
     Update a template's contents
     Please note that only a subset of fields can be edited
     """
-    t = _update_template(template=template, updates=updates)
+    t = _update_template(template=template, data=data)
     return t.as_dict()
 
 

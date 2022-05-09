@@ -55,7 +55,7 @@ class TestUpdateTemplate(TestCase):
 
         r = update_template(
             template=template_1.name,
-            updates=_updates
+            data=_updates
         )
         self.assertIsInstance(r, NotificationTemplate)
 
@@ -84,7 +84,7 @@ class TestUpdateTemplate(TestCase):
 
         r = update_template(
             template=template_1.name,
-            updates=_updates
+            data=_updates
         )
         self.assertIsInstance(r, NotificationTemplate)
 
@@ -115,7 +115,7 @@ class TestUpdateTemplate(TestCase):
 
         r = update_template(
             template=template_1.name,
-            updates=_updates
+            data=_updates
         )
         self.assertIsInstance(r, NotificationTemplate)
 
@@ -150,7 +150,7 @@ class TestUpdateTemplate(TestCase):
 
         r = update_template(
             template=template_1.name,
-            updates=_updates
+            data=_updates
         )
         self.assertIsInstance(r, NotificationTemplate)
 
@@ -178,7 +178,7 @@ class TestUpdateTemplate(TestCase):
 
         r = update_template(
             template=template_1.name,
-            updates=_updates
+            data=_updates
         )
 
         self.assertIsInstance(r, NotificationTemplate)
