@@ -14,7 +14,8 @@ def create_notification_client(data: dict):
     """
     Create a Notification Client under a Manager
     """
-    return _create_notification_client(data=data)
+    client = _create_notification_client(data=data)
+    return client.as_dict()
 
 
 @frappe_notification_api(only_client_managers=True)
@@ -22,7 +23,8 @@ def update_notification_client(client: str, updates: dict):
     """
     Update a Notification Client under a Manager
     """
-    return _update_notification_client(client=client, updates=updates)
+    client = _update_notification_client(client=client, updates=updates)
+    return client.as_dict()
 
 
 @frappe_notification_api(only_client_managers=True)
@@ -30,7 +32,7 @@ def get_notification_clients():
     """
     Get a list of clients managed by active manager
     """
-    return _get_notification_clients()
+    return dict(clients=_get_notification_clients())
 
 
 @frappe_notification_api(only_client_managers=True)
@@ -38,7 +40,8 @@ def get_notification_client(client: str):
     """
     Get a single client that is managed by active manager
     """
-    return _get_notification_client(client=client)
+    client = _get_notification_client(client=client)
+    return client.as_dict()
 
 
 @frappe_notification_api(only_client_managers=False)
