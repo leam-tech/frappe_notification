@@ -4,6 +4,7 @@ from .test_get_client import TestGetClient
 from .test_get_clients import TestGetClients
 from .test_update_client import TestUpdateClient
 from .test_validate_client_access import TestValidateClientAccess
+from .test_get_notification_logs import TestGetNotificationLogs
 
 
 def get_clients_controller_tests():
@@ -14,4 +15,5 @@ def get_clients_controller_tests():
         TestGetClients,
         TestUpdateClient,
         TestValidateClientAccess,
+        TestGetNotificationLogs,
     ]
