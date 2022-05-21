@@ -56,13 +56,30 @@ class TestSendNotification(unittest.TestCase):
         template = _get_template_created_by(self.templates, manager)
 
         sms_channel = self.channels.get_channel("sms")
+        recipients = [
+            dict(channel=sms_channel, channel_id="+966 560440266", user_identifier="id-1"),
+            dict(channel=sms_channel, channel_id="+966 560440267", user_identifier="id-2"),
+        ]
+
         outbox = send_notification(
             template_key=template.key,
             context=dict(otp=2233, name=frappe.mock("first_name")),  # unrelated ctx
-            recipients=[dict(channel=sms_channel, channel_id="+966 560440266")]
+            recipients=recipients,
         )
         self.assertIsInstance(outbox, NotificationOutbox)
         self.outboxes.add_document(outbox)
+
+        self.assertEqual(len(outbox.recipients), len(recipients))
+        self.assertCountEqual(
+            [
+                (x.get("channel"), x.get("channel_id"), x.get("user_identifier"))
+                for x in recipients
+            ],
+            [
+                (x.get("channel"), x.get("channel_id"), x.get("user_identifier"))
+                for x in outbox.recipients
+            ],
+        )
 
         self.assertEqual(outbox.notification_client, manager)
 

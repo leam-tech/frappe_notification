@@ -1,6 +1,6 @@
 # Copyright (c) 2022, Leam Technology Systems and contributors
 # For license information, please see license.txt
-from typing import List, Dict, Callable, Union
+from typing import List, Dict, Callable, Optional, Union
 from enum import Enum
 
 import frappe
@@ -27,6 +27,8 @@ class NotificationOutboxStatus(Enum):
 class ChannelHandlerInvokeParams(frappe._dict):
     channel: str
     channel_id: str
+    user_identifier: Optional[str]
+
     sender: str
     sender_type: str
     to_validate: bool
@@ -58,7 +60,7 @@ class NotificationOutbox(Document):
     status: str
     recipients: List[NotificationOutboxRecipientItem]
 
-    _channel_handlers: Dict[str, Callable] = dict()
+    _channel_handlers: Dict[str, Callable] = None
 
     def validate(self):
         """ All validations kick in on_submit """
@@ -125,6 +127,9 @@ class NotificationOutbox(Document):
         """
         Gets the channel handler or Exception instance where applicable
         """
+        if self._channel_handlers is None:
+            self._channel_handlers = dict()
+
         if channel in self._channel_handlers:
             return self._channel_handlers.get(channel)
 
@@ -183,9 +188,10 @@ class NotificationOutbox(Document):
     def _get_channel_handler_invoke_params(self, row: NotificationOutboxRecipientItem):
         return ChannelHandlerInvokeParams(dict(
             channel=row.get("channel"),
+            channel_id=row.get("channel_id"),
+            user_identifier=row.get("user_identifier"),
             sender=row.get("sender"),
             sender_type=row.get("sender_type"),
-            channel_id=row.get("channel_id"),
             subject=self.get("subject"),
             content=self.get("content"),
             to_validate=False,

@@ -25,6 +25,7 @@ from ..notification_template_language_item.notification_template_language_item i
 class NotificationRecipientItem(frappe._dict):
     channel: str
     channel_id: str
+    user_identifier: str
 
 
 class OnlyManagerTemplatesCanBeShared(FrappeNotificationException):
@@ -235,6 +236,7 @@ class NotificationTemplate(Document):
                 dict(
                     channel=x.get("channel"),
                     channel_id=x.get("channel_id"),
+                    user_identifier=x.get("user_identifier"),
                     sender_type=_get_sender(x.get("channel"))[0],
                     sender=_get_sender(x.get("channel"))[1],
                 )

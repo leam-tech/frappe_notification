@@ -7,8 +7,10 @@ from frappe.model.document import Document
 
 class NotificationOutboxRecipientItem(Document):
     channel: str
-    status: str
     channel_id: str
+    user_identifier: str
+    status: str
     time_sent: str
     sender_type: str
     sender: str
+    seen: int

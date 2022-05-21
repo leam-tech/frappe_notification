@@ -6,6 +6,7 @@ from frappe_notification.frappe_notification.controllers.clients import (
     get_notification_clients as _get_notification_clients,
     get_notification_client as _get_notification_client,
     get_notification_logs as _get_notification_logs,
+    mark_log_seen as _mark_log_seen,
     get_me as _get_me
 )
 from frappe_notification.utils import frappe_notification_api
@@ -56,8 +57,9 @@ def get_me():
 
 @frappe_notification_api()
 def get_notification_logs(
-        channel: str,
-        channel_id: str,
+        channel: Optional[str] = None,
+        channel_id: Optional[str] = None,
+        user_identifier: Optional[str] = None,
         limit_start: Optional[int] = 0,
         limit_page_length: Optional[int] = 10,
         order_by: Optional[str] = "creation desc"):
@@ -68,9 +70,33 @@ def get_notification_logs(
     logs = _get_notification_logs(
         channel=channel,
         channel_id=channel_id,
+        user_identifier=user_identifier,
         limit_start=limit_start,
         limit_page_length=limit_page_length,
         order_by=order_by,
     )
 
     return dict(logs=logs)
+
+
+@frappe_notification_api()
+def mark_log_seen(
+        outbox: str,
+        channel: Optional[str] = None,
+        channel_id: Optional[str] = None,
+        user_identifier: Optional[str] = None,
+        outbox_recipient_row: Optional[str] = None,
+):
+    """
+    Marks a particular log as seen. Information on how to treat the parameters can be
+    found in the controller method
+    """
+    t = _mark_log_seen(
+        outbox=outbox,
+        channel=channel,
+        channel_id=channel_id,
+        user_identifier=user_identifier,
+        outbox_recipient_row=outbox_recipient_row,
+    )
+
+    return dict(marked=t)

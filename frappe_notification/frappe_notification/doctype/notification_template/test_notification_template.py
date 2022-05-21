@@ -245,10 +245,10 @@ class TestNotificationTemplate(unittest.TestCase):
         ))
 
         recipient_list = [
-            {"channel": sms_channel, "channel_id": sms_receiver_1},
-            {"channel": sms_channel, "channel_id": sms_receiver_2},
-            {"channel": email_channel, "channel_id": email_receiver_1},
-            {"channel": email_channel, "channel_id": email_receiver_2},
+            {"channel": sms_channel, "channel_id": sms_receiver_1, "user_identifier": "id-121"},
+            {"channel": sms_channel, "channel_id": sms_receiver_2, "user_identifier": "id-122"},
+            {"channel": email_channel, "channel_id": email_receiver_1, "user_identifier": "id-123"},
+            {"channel": email_channel, "channel_id": email_receiver_2, "user_identifier": "id-124"},
         ]
 
         outbox: NotificationOutbox = d.send_notification(_CTX, recipient_list)
@@ -266,6 +266,7 @@ class TestNotificationTemplate(unittest.TestCase):
 
             self.assertEqual(outbox_row.channel, recipient.channel)
             self.assertEqual(outbox_row.channel_id, recipient.channel_id)
+            self.assertEqual(outbox_row.user_identifier, recipient.user_identifier)
 
             if recipient.channel == email_channel:
                 self.assertEqual(outbox_row.sender_type, email_sender_type)

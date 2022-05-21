@@ -149,6 +149,8 @@ class TestNotificationOutbox(unittest.TestCase):
         sms_channel = self.channels.get_channel("sms")
 
         d = self.get_draft_outbox()
+        d._channel_handlers = dict()
+
         d.name = "test-outbox-1"
         d.recipients[0].name = "test-outbox-row-1"
 
@@ -186,6 +188,8 @@ class TestNotificationOutbox(unittest.TestCase):
         - Lets try sending out two Notifications, 1 SMS & 1 Email
         """
         d = self.get_draft_outbox()
+        d._channel_handlers = dict()
+
         d.recipients = []
         d.append("recipients", dict(
             status=NotificationOutboxStatus.PENDING.value,
@@ -305,9 +309,10 @@ class TestNotificationOutbox(unittest.TestCase):
 
         return ChannelHandlerInvokeParams(dict(
             channel=row.get("channel"),
+            channel_id=row.get("channel_id"),
+            user_identifier=row.get("user_identifier"),
             sender=row.get("sender"),
             sender_type=row.get("sender_type"),
-            channel_id=row.get("channel_id"),
             subject=d.get("subject"),
             content=d.get("content"),
             to_validate=False,

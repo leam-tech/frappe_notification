@@ -22,6 +22,8 @@ def email_handler(
     outbox_row_name: str,
     # When this is true, verify the channel_id & other params. Do not send the message
     to_validate=False,
+    # If there is any extra arguments, eg: user_identifier
+    **kwargs
 ):
     assert channel == "Email"
     assert sender_type in ("Email Account", None)

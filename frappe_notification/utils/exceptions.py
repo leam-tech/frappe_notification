@@ -30,6 +30,23 @@ class ValidationError(FrappeNotificationException):
     def __init__(self, message: str):
         self.error_code = "VALIDATION_ERROR"
         self.message = message or frappe._("Validation Error")
+        self.http_status_code = 400
+        self.data = dict()
+
+
+class NotFound(FrappeNotificationException):
+    def __init__(self, message: str):
+        self.error_code = "NOT_FOUND"
+        self.message = message or frappe._("Not Found")
+        self.data = dict()
+        self.http_status_code = 404
+
+
+class InvalidRequest(FrappeNotificationException):
+    def __init__(self, message: str):
+        self.error_code = "INVALID_REQUEST"
+        self.message = message or frappe._("Invalid Request")
+        self.http_status_code = 400
         self.data = dict()
 
 
@@ -37,6 +54,7 @@ class DuplicateException(FrappeNotificationException):
     def __init__(self, message: str):
         self.error_code = "DUPLICATE_EXCEPTION"
         self.message = message or frappe._("Duplication Error")
+        self.http_status_code = 400
         self.data = dict()
 
 
@@ -54,6 +72,7 @@ class RecipientErrors(FrappeNotificationException):
     def __init__(self, recipient_errors: List[FrappeNotificationException]) -> None:
         self.error_code = "NOTIFICATION_RECEIVER_ERRORS"
         self.message = frappe._("There are errors with the receivers mentioned")
+        self.http_status_code = 400
         self.data = frappe._dict(
             recipient_errors=[
                 x.as_dict() if isinstance(x, FrappeNotificationException) else x
@@ -106,4 +125,14 @@ class NotificationTemplateNotFound(FrappeNotificationException):
         self.http_status_code = 404
         self.data = frappe._dict(
             template=template
+        )
+
+
+class NotificationOutboxNotFound(FrappeNotificationException):
+    def __init__(self, outbox: str):
+        self.error_code = "NOTIFICATION_OUTBOX_NOT_FOUND"
+        self.message = frappe._("Notification Outbox: {0} cannot be found").format(outbox)
+        self.http_status_code = 404
+        self.data = frappe._dict(
+            outbox=outbox
         )
