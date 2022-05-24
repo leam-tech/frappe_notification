@@ -12,13 +12,14 @@ app_license = "MIT"
 
 fixtures = [
     {"dt": "Notification Channel", "filters": [["name", "IN", [
-        "SMS", "Email", "Slack", "Telegram", "Whatsapp"
+        "SMS", "Email", "FCM", "Slack", "Telegram", "Whatsapp"
     ]]]}
 ]
 
 notification_channel_handler = {
     "SMS": "frappe_notification.handlers.sms_handler",
     "Email": "frappe_notification.handlers.email_handler",
+    "FCM": "frappe_notification.handlers.fcm_handler",
 }
 
 # Includes in <head>

@@ -1,22 +1,41 @@
 [
  {
+  "default_sender": null,
   "docstatus": 0,
   "doctype": "Notification Channel",
-  "modified": "2022-04-19 09:00:10.636554",
+  "enabled": 1,
+  "modified": "2022-05-21 12:01:56.833703",
   "name": "SMS",
   "parent": null,
   "parentfield": null,
   "parenttype": null,
+  "sender_type": null,
   "title": "SMS"
  },
  {
+  "default_sender": null,
   "docstatus": 0,
   "doctype": "Notification Channel",
-  "modified": "2022-04-19 09:00:16.055403",
+  "enabled": 1,
+  "modified": "2022-05-24 09:32:48.611427",
   "name": "Email",
   "parent": null,
   "parentfield": null,
   "parenttype": null,
+  "sender_type": "Email Account",
   "title": "Email"
+ },
+ {
+  "default_sender": null,
+  "docstatus": 0,
+  "doctype": "Notification Channel",
+  "enabled": 1,
+  "modified": "2022-05-23 12:25:59.640120",
+  "name": "FCM",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "sender_type": null,
+  "title": "FCM"
  }
 ]
