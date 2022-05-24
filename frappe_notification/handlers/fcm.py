@@ -38,7 +38,7 @@ def fcm_handler(
         if not frappe.flags.in_test:
             _notify_via_fcm(
                 title=subject,
-                content=content,
+                body=content,
                 data=None,
                 tokens=[
                     channel_id
