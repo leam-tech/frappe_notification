@@ -25,7 +25,7 @@ def log_handler_error(
     **kwargs
 ):
     return frappe.log_error(
-        title="Email Handler Error",
+        title=f"Handler Error: {channel}",
         message=f"""
 Channel: {channel}
 Channel ID: {channel_id}
