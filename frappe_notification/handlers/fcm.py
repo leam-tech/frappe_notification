@@ -2,6 +2,7 @@ import frappe
 
 from renovation_core.utils.fcm import _notify_via_fcm
 from frappe_notification import NotificationOutbox, NotificationOutboxStatus
+from .utils import log_handler_error
 
 
 def fcm_handler(
@@ -48,3 +49,15 @@ def fcm_handler(
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
     except BaseException:
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.FAILED)
+        log_handler_error(
+            channel=channel,
+            sender_type=sender_type,
+            sender=sender,
+            channel_id=channel_id,
+            subject=subject,
+            content=content,
+            outbox=outbox,
+            outbox_row_name=outbox_row_name,
+            to_validate=to_validate,
+            **kwargs
+        )

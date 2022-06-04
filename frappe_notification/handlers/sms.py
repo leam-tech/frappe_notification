@@ -4,6 +4,7 @@ from frappe_notification import (
     NotificationOutbox,
     NotificationOutboxStatus)
 from renovation_core.utils.sms_setting import validate_receiver_nos, send_sms
+from .utils import log_handler_error
 
 
 def sms_handler(
@@ -56,3 +57,15 @@ def sms_handler(
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
     except BaseException:
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.FAILED)
+        log_handler_error(
+            channel=channel,
+            sender_type=sender_type,
+            sender=sender,
+            channel_id=channel_id,
+            subject=subject,
+            content=content,
+            outbox=outbox,
+            outbox_row_name=outbox_row_name,
+            to_validate=to_validate,
+            **kwargs
+        )
