@@ -33,6 +33,9 @@ def email_handler(
 
     outbox: NotificationOutbox = frappe.get_doc("Notification Outbox", outbox)
     try:
+        if sender_type == "Email Account" and sender:
+            sender = frappe.db.get_value("Email Account", sender, "email_id")
+
         if not frappe.flags.in_test:
             frappe.sendmail(
                 recipients=[channel_id],
