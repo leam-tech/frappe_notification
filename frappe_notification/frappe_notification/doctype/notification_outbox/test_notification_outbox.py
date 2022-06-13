@@ -307,9 +307,17 @@ class TestNotificationOutbox(unittest.TestCase):
             d: NotificationOutbox,
             row: NotificationOutboxRecipientItem):
 
+        channel_args = row.channel_args
+        if isinstance(channel_args, str):
+            channel_args = frappe.parse_json(channel_args)
+
+        if not channel_args:
+            channel_args = dict()
+
         return ChannelHandlerInvokeParams(dict(
             channel=row.get("channel"),
             channel_id=row.get("channel_id"),
+            channel_args=channel_args,
             user_identifier=row.get("user_identifier"),
             sender=row.get("sender"),
             sender_type=row.get("sender_type"),

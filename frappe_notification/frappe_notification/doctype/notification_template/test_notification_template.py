@@ -230,8 +230,16 @@ class TestNotificationTemplate(unittest.TestCase):
         email_receiver_1 = "test1@notifications.com"
         email_receiver_2 = "test2@notifications.com"
 
+        sms_args = dict(sms_type=1)
+        sms_args_special = dict(sms_type=2)
+        email_args_special = dict(email_type=2)
+
         _OTP = "989566"
-        _CTX = dict(otp=_OTP)
+        _CTX = dict(
+            otp=_OTP,
+            channel_args=frappe.as_json({
+                sms_channel: sms_args,
+            }))
 
         d = NotificationTemplate(dict(
             doctype="Notification Template",
@@ -245,10 +253,24 @@ class TestNotificationTemplate(unittest.TestCase):
         ))
 
         recipient_list = [
-            {"channel": sms_channel, "channel_id": sms_receiver_1, "user_identifier": "id-121"},
-            {"channel": sms_channel, "channel_id": sms_receiver_2, "user_identifier": "id-122"},
-            {"channel": email_channel, "channel_id": email_receiver_1, "user_identifier": "id-123"},
-            {"channel": email_channel, "channel_id": email_receiver_2, "user_identifier": "id-124"},
+            {
+                "channel": sms_channel,
+                "channel_id": sms_receiver_1,
+                "user_identifier": "id-121",
+                "channel_args": sms_args_special},  # Dedicated Args
+            {
+                "channel": sms_channel,
+                "channel_id": sms_receiver_2,
+                "user_identifier": "id-122"},
+            {
+                "channel": email_channel,
+                "channel_id": email_receiver_1,
+                "user_identifier": "id-123",
+                "channel_args": email_args_special},  # Dedicated Args
+            {
+                "channel": email_channel,
+                "channel_id": email_receiver_2,
+                "user_identifier": "id-124"},
         ]
 
         outbox: NotificationOutbox = d.send_notification(_CTX, recipient_list)
@@ -271,6 +293,22 @@ class TestNotificationTemplate(unittest.TestCase):
             if recipient.channel == email_channel:
                 self.assertEqual(outbox_row.sender_type, email_sender_type)
                 self.assertEqual(outbox_row.sender, email_sender)
+
+                if recipient.channel_id == email_receiver_1:
+                    self.assertIsInstance(outbox_row.channel_args, str)
+                    self.assertEqual(frappe.parse_json(outbox_row.channel_args), email_args_special)
+                else:
+                    self.assertEqual(outbox_row.channel_args, "{}")
+
+            if recipient.channel == sms_channel:
+                if recipient.channel_id == sms_receiver_1:
+                    # Assert Channel Args
+                    self.assertIsInstance(outbox_row.channel_args, str)
+                    self.assertEqual(frappe.parse_json(outbox_row.channel_args), sms_args_special)
+                else:
+                    # Global Channel Args
+                    self.assertIsInstance(outbox_row.channel_args, str)
+                    self.assertEqual(frappe.parse_json(outbox_row.channel_args), sms_args)
 
     def test_validate_can_fork(self):
         d = NotificationTemplate(dict(

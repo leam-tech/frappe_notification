@@ -27,6 +27,7 @@ class NotificationOutboxStatus(Enum):
 class ChannelHandlerInvokeParams(frappe._dict):
     channel: str
     channel_id: str
+    channel_args: dict
     user_identifier: Optional[str]
 
     sender: str
@@ -186,9 +187,17 @@ class NotificationOutbox(Document):
         self.save(ignore_permissions=True)
 
     def _get_channel_handler_invoke_params(self, row: NotificationOutboxRecipientItem):
+        channel_args = row.channel_args
+        if isinstance(channel_args, str):
+            channel_args = frappe.parse_json(channel_args)
+
+        if not channel_args:
+            channel_args = dict()
+
         return ChannelHandlerInvokeParams(dict(
             channel=row.get("channel"),
             channel_id=row.get("channel_id"),
+            channel_args=channel_args,
             user_identifier=row.get("user_identifier"),
             sender=row.get("sender"),
             sender_type=row.get("sender_type"),

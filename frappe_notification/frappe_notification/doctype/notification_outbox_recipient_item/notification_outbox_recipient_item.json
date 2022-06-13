@@ -13,7 +13,8 @@
   "sender_type",
   "sender",
   "user_identifier",
-  "seen"
+  "seen",
+  "channel_args"
  ],
  "fields": [
   {
@@ -73,12 +74,17 @@
    "fieldname": "seen",
    "fieldtype": "Check",
    "label": "Seen"
+  },
+  {
+   "fieldname": "channel_args",
+   "fieldtype": "Small Text",
+   "label": "Channel Args"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-05-20 12:23:42.433200",
+ "modified": "2022-06-13 12:03:00.545779",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Outbox Recipient Item",

@@ -25,6 +25,7 @@ from ..notification_template_language_item.notification_template_language_item i
 class NotificationRecipientItem(frappe._dict):
     channel: str
     channel_id: str
+    channel_args: str
     user_identifier: str
 
 
@@ -219,6 +220,9 @@ class NotificationTemplate(Document):
         content = frappe.render_template(content, context)
 
         _sender_info = dict()
+        _ctx_channel_args = context.get("channel_args", "{}")
+        _ctx_channel_args = frappe.parse_json(_ctx_channel_args) if isinstance(
+            _ctx_channel_args, str) else _ctx_channel_args
 
         def _get_sender(channel: str):
             if channel in _sender_info:
@@ -226,6 +230,21 @@ class NotificationTemplate(Document):
 
             _sender_info[channel] = self.get_channel_sender(channel)
             return _sender_info[channel]
+
+        def _get_channel_args(recipient: NotificationRecipientItem):
+            args = None
+            if recipient.get("channel_args"):
+                args = recipient.get("channel_args")
+            else:
+                args = _ctx_channel_args.get(recipient.get("channel"))
+
+            if not args:
+                args = "{}"
+
+            if not isinstance(args, str):
+                args = frappe.as_json(args)
+
+            return args
 
         outbox = frappe.get_doc(dict(
             doctype="Notification Outbox",
@@ -236,6 +255,7 @@ class NotificationTemplate(Document):
                 dict(
                     channel=x.get("channel"),
                     channel_id=x.get("channel_id"),
+                    channel_args=_get_channel_args(x),
                     user_identifier=x.get("user_identifier"),
                     sender_type=_get_sender(x.get("channel"))[0],
                     sender=_get_sender(x.get("channel"))[1],

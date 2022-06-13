@@ -14,6 +14,8 @@ def fcm_handler(
     sender: str,
     # Recipient ID, @test-user-a
     channel_id: str,
+    # Channel Specific Args, like FCM Data, Email CC
+    channel_args: dict,
     # Subject of message, ignore for Telegram, useful for Email
     subject: str,
     # The text message content
@@ -35,11 +37,15 @@ def fcm_handler(
 
     outbox: NotificationOutbox = frappe.get_doc("Notification Outbox", outbox)
     try:
+        fcm_data = None
+        if channel_args and "fcm_data" in channel_args:
+            fcm_data = channel_args.get("fcm_data")
+
         if not frappe.flags.in_test:
             _notify_via_fcm(
                 title=subject,
                 body=content,
-                data=None,
+                data=fcm_data,
                 tokens=[
                     channel_id
                 ]

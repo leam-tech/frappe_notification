@@ -16,6 +16,8 @@ def sms_handler(
     sender: str,
     # Recipient ID, @test-user-a
     channel_id: str,
+    # Channel Specific Args, like FCM Data, Email CC
+    channel_args: dict,
     # Subject of message, ignore for Telegram, useful for Email
     subject: str,
     # The text message content
