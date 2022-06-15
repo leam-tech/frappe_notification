@@ -9,6 +9,8 @@ from frappe_notification.frappe_notification.controllers.clients import (
     mark_log_seen as _mark_log_seen,
     get_me as _get_me
 )
+from frappe_notification.frappe_notification.controllers.clients.get_notification_logs import \
+    GetNotificationLogsExecutionArgs
 from frappe_notification.utils import frappe_notification_api
 
 
@@ -56,27 +58,11 @@ def get_me():
 
 
 @frappe_notification_api()
-def get_notification_logs(
-        channel: Optional[str] = None,
-        channel_id: Optional[str] = None,
-        user_identifier: Optional[str] = None,
-        limit_start: Optional[int] = 0,
-        limit_page_length: Optional[int] = 10,
-        order_by: Optional[str] = "creation desc"):
+def get_notification_logs(args:GetNotificationLogsExecutionArgs):
     """
     Fetches a list of Notifications sent to a specific user via specific channel
     """
-
-    logs = _get_notification_logs(
-        channel=channel,
-        channel_id=channel_id,
-        user_identifier=user_identifier,
-        limit_start=limit_start,
-        limit_page_length=limit_page_length,
-        order_by=order_by,
-    )
-
-    return dict(logs=logs)
+    return _get_notification_logs(args)
 
 
 @frappe_notification_api()
