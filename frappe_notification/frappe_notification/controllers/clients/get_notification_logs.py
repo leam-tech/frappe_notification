@@ -60,8 +60,8 @@ def get_notification_logs_count_resolver(paginator: CursorPaginator, filters):
     client = get_active_notification_client()
     if not client:
         raise NotificationClientNotFound()
-    filters = paginator.extra_args.get("filters") if paginator.extra_args else None
-    conditions = get_notifications_logs_filters(NotificationLogsFilters(filters or {}))
+    notification_filters = paginator.extra_args.get("filters") if paginator.extra_args else None
+    conditions = get_notifications_logs_filters(NotificationLogsFilters(notification_filters or {}))
 
     return frappe.db.sql(f"""
     SELECT
@@ -89,8 +89,9 @@ def get_notification_logs_node_resolver(paginator: CursorPaginator, filters, fie
     extra_sorting_fields = f", {', '.join(sorting_fields)}"
     order_by = ', '.join([f'{x} {sort_dir}' for x in sorting_fields])
 
-    filters = paginator.extra_args.get("filters") if paginator.extra_args else None
-    conditions = get_notifications_logs_filters(NotificationLogsFilters(filters or {}))
+    notification_filters = paginator.extra_args.get("filters") if paginator.extra_args else None
+    conditions = get_notifications_logs_filters(NotificationLogsFilters(notification_filters or {}),
+                                                filters)
 
     return frappe.db.sql(f"""
     SELECT
@@ -122,7 +123,7 @@ def get_notification_logs_node_resolver(paginator: CursorPaginator, filters, fie
     }, as_dict=1, debug=0)
 
 
-def get_notifications_logs_filters(filters: NotificationLogsFilters):
+def get_notifications_logs_filters(filters: NotificationLogsFilters, cursor_filters=None):
     channel = filters.channel
     channel_id = filters.channel_id
     user_identifier = filters.user_identifier
@@ -133,6 +134,10 @@ def get_notifications_logs_filters(filters: NotificationLogsFilters):
         ))
 
     conditions = []
+
+    if cursor_filters:
+        conditions.extend(cursor_filters)
+
     if channel:
         conditions.append(f"recipient_item.channel = '{channel}'")
 
