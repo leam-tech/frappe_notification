@@ -114,11 +114,10 @@ def get_notification_logs_node_resolver(paginator: CursorPaginator, filters, fie
         AND outbox.docstatus = 1
         {conditions}
         AND recipient_item.status = "Success"
-    ORDER BY %(order_by)s
+    ORDER BY {order_by}
     LIMIT %(limit_page_length)s
     """, {
         "client": client,
-        "order_by": order_by,
         "limit_page_length": limit
     }, as_dict=1, debug=0)
 
