@@ -39,8 +39,8 @@ def get_notification_logs(args: GetNotificationLogsExecutionArgs):
     sort_by = args.pop("sort_by", None)
     if sort_by:
         sort_by = NotificationLogSortBy({
-            "direction": CursorPaginatorSortByDirection[sort_by.field],
-            "field": NotificationLogsSortByEnum[sort_by.direction]
+            "direction": CursorPaginatorSortByDirection[sort_by.get("direction")],
+            "field": NotificationLogsSortByEnum[sort_by.get("field")]
         })
         args.sort_by = sort_by
 

@@ -121,6 +121,10 @@ class TestGetNotificationLogs(TestCase):
             "filters": {
                 "channel": sms_channel,
                 "user_identifier": self._USER_ID_1
+            },
+            "sort_by": {
+                "direction": "DESC",
+                "field": "CREATION"
             }
         })
         r = get_notification_logs(args)

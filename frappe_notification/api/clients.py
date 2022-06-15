@@ -58,7 +58,7 @@ def get_me():
 
 
 @frappe_notification_api()
-def get_notification_logs(args:GetNotificationLogsExecutionArgs):
+def get_notification_logs(args: GetNotificationLogsExecutionArgs):
     """
     Fetches a list of Notifications sent to a specific user via specific channel
     """
