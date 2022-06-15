@@ -42,7 +42,7 @@ def get_notification_logs(args: GetNotificationLogsExecutionArgs):
             "direction": CursorPaginatorSortByDirection[sort_by.get("direction")],
             "field": NotificationLogsSortByEnum[sort_by.get("field")]
         })
-        args.sort_by = sort_by
+        args["sort_by"] = sort_by
 
     r = CursorPaginator(
         doctype="Notification Outbox",
