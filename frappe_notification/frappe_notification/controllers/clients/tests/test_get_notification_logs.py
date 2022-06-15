@@ -9,7 +9,7 @@ from frappe_notification import (
     NotificationOutbox, NotificationOutboxFixtures,
     set_active_notification_client)
 
-from ..get_notification_logs import get_notification_logs
+from ..get_notification_logs import get_notification_logs, GetNotificationLogsExecutionArgs
 
 
 class TestGetNotificationLogs(TestCase):
@@ -85,16 +85,21 @@ class TestGetNotificationLogs(TestCase):
 
     def test_channel_filters(self):
         sms_channel = self.channels.get_channel("sms")
-        r = get_notification_logs(
-            channel=sms_channel,
-            channel_id=self.SMS_1,
-        )
+        args = GetNotificationLogsExecutionArgs({
+            "first": 100,
+            "filters": {
+                "channel": sms_channel,
+                "channel_id": self.SMS_1
+            }
+        })
+        r = get_notification_logs(args)
+        r = [edge.get("node") for edge in r.get("edges")]
 
         self.assertIsInstance(r, list)
         self.assertGreater(len(r), 0)
         self.assertCountEqual([
             "subject", "content", "outbox", "outbox_recipient_row", "time_sent",
-            "user_identifier", "seen", "channel", "channel_id"],
+            "user_identifier", "seen", "channel", "channel_id", "creation"],
             r[0].keys())
         for log in r:
             self.assertEqual(
@@ -111,10 +116,15 @@ class TestGetNotificationLogs(TestCase):
         Combine user_identifier and channel filter
         """
         sms_channel = self.channels.get_channel("sms")
-        r = get_notification_logs(
-            channel=sms_channel,
-            user_identifier=self._USER_ID_1
-        )
+        args = GetNotificationLogsExecutionArgs({
+            "first": 100,
+            "filters": {
+                "channel": sms_channel,
+                "user_identifier": self._USER_ID_1
+            }
+        })
+        r = get_notification_logs(args)
+        r = [edge.get("node") for edge in r.get("edges")]
 
         for log in r:
             # SMS_1 belongs to _USER_ID_1
@@ -136,19 +146,28 @@ class TestGetNotificationLogs(TestCase):
 
         In this TestSuite, we have used SMS_1 & EMAIL_1 only for USER_ID_1
         """
-        r = get_notification_logs(user_identifier=self._USER_ID_1)
-        self.assertCountEqual(
-            [self.SMS_1, self.EMAIL_1],
-            list(set(x.channel_id for x in r))
-        )
+        args = GetNotificationLogsExecutionArgs({
+            "first": 100,
+            "filters": {
+                "user_identifier": self._USER_ID_1
+            }
+        })
+        r = get_notification_logs(args)
+        r = [edge.get("node") for edge in r.get("edges")]
+        self.assertCountEqual([self.SMS_1, self.EMAIL_1], list({x.channel_id for x in r}))
 
     def test_limits(self):
         sms_channel = self.channels.get_channel("sms")
-        r = get_notification_logs(
-            channel=sms_channel,
-            channel_id=self.SMS_1,
-            limit_page_length=2
-        )
+        args = GetNotificationLogsExecutionArgs({
+            "first": 2,
+            "filters": {
+                "channel": sms_channel,
+                "channel_id": self.SMS_1,
+            }
+        })
+
+        r = get_notification_logs(args)
+        r = [edge.get("node") for edge in r.get("edges")]
 
         self.assertEqual(len(r), 2)
 
@@ -162,10 +181,25 @@ class TestGetNotificationLogs(TestCase):
         """
 
         with self.assertRaises(InvalidRequest):
-            get_notification_logs()
+            args = GetNotificationLogsExecutionArgs({
+                "first": 100,
+            })
+            get_notification_logs(args)
 
         with self.assertRaises(InvalidRequest):
-            get_notification_logs(channel="Email")
+            args = GetNotificationLogsExecutionArgs({
+                "first": 100,
+                "filters": {
+                    "channel": "Email"
+                }
+            })
+            get_notification_logs(args)
 
         with self.assertRaises(InvalidRequest):
-            get_notification_logs(channel_id="test@example.com")
+            args = GetNotificationLogsExecutionArgs({
+                "first": 100,
+                "filters": {
+                    "channel_id": "test@example.com"
+                }
+            })
+            get_notification_logs(args)
