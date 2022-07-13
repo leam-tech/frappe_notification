@@ -12,10 +12,11 @@ from ..get_client import get_notification_client
 
 
 class TestGetClient(TestCase):
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
         frappe.set_user("Guest")

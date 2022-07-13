@@ -17,13 +17,17 @@ from ..send import send_notification, get_target_template
 
 
 class TestSendNotification(unittest.TestCase):
-    channels = NotificationChannelFixtures()
-    clients = NotificationClientFixtures()
-    templates = NotificationTemplateFixtures()
-    outboxes = NotificationOutboxFixtures()
+    channels: NotificationChannelFixtures = None
+    clients: NotificationClientFixtures = None
+    templates: NotificationTemplateFixtures = None
+    outboxes: NotificationOutboxFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.channels = NotificationChannelFixtures()
+        cls.clients = NotificationClientFixtures()
+        cls.templates = NotificationTemplateFixtures()
+
         cls.channels.setUp()
         cls.clients.setUp()
         cls.templates.setUp()
@@ -35,6 +39,7 @@ class TestSendNotification(unittest.TestCase):
         cls.channels.tearDown()
 
     def setUp(self):
+        self.outboxes = NotificationOutboxFixtures()
         self.outboxes.setUp()
 
         frappe.set_user("Guest")

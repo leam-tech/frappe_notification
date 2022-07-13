@@ -13,11 +13,12 @@ from ..fork_template_doc import fork_template
 
 
 class TestForkTemplate(TestCase):
-    clients = NotificationClientFixtures()
-    templates = NotificationTemplateFixtures()
+    clients: NotificationClientFixtures = None
+    templates: NotificationTemplateFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
     @classmethod
@@ -25,6 +26,7 @@ class TestForkTemplate(TestCase):
         cls.clients.tearDown()
 
     def setUp(self):
+        self.templates = NotificationTemplateFixtures()
         self.templates.setUp()
 
         frappe.set_user("Guest")

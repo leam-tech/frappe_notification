@@ -70,13 +70,17 @@ class NotificationTemplateFixtures(TestFixture):
 
 class TestNotificationTemplate(unittest.TestCase):
 
-    channels = NotificationChannelFixtures()
-    clients = NotificationClientFixtures()
-    templates = NotificationTemplateFixtures()
+    channels: NotificationChannelFixtures = None
+    clients: NotificationClientFixtures = None
+    templates: NotificationTemplateFixtures = None
     faker = Faker()
 
     @classmethod
     def setUpClass(cls):
+        cls.channels = NotificationChannelFixtures()
+        cls.clients = NotificationClientFixtures()
+        cls.templates = NotificationTemplateFixtures()
+
         cls.channels.setUp()
         cls.clients.setUp()
 

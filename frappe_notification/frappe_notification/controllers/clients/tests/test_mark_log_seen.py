@@ -17,9 +17,9 @@ from ..mark_log_seen import mark_log_seen
 
 class TestMarkLogSeen(TestCase):
     faker = Faker()
-    channels = NotificationChannelFixtures()
-    clients = NotificationClientFixtures()
-    outboxes = NotificationOutboxFixtures()
+    channels: NotificationChannelFixtures = None
+    clients: NotificationClientFixtures = None
+    outboxes: NotificationOutboxFixtures = None
 
     N_FIXTURE_OUTBOXES = 5
     SMS_1 = "+966 560440266"
@@ -29,6 +29,10 @@ class TestMarkLogSeen(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.channels = NotificationChannelFixtures()
+        cls.clients = NotificationClientFixtures()
+        cls.outboxes = NotificationOutboxFixtures()
+
         cls.channels.setUp()
         cls.clients.setUp()
 

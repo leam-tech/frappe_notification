@@ -56,9 +56,10 @@ class NotificationClientFixtures(TestFixture):
 
 class TestNotificationClient(unittest.TestCase):
     faker = Faker()
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     def setUp(self):
+        self.clients = NotificationClientFixtures()
         self.clients.setUp()
 
     def tearDown(self) -> None:

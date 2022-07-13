@@ -15,11 +15,12 @@ from ..update_template_doc import update_template
 
 
 class TestUpdateTemplate(TestCase):
-    clients = NotificationClientFixtures()
-    templates = NotificationTemplateFixtures()
+    clients: NotificationClientFixtures = None
+    templates: NotificationTemplateFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
     @classmethod
@@ -27,6 +28,7 @@ class TestUpdateTemplate(TestCase):
         cls.clients.tearDown()
 
     def setUp(self):
+        self.templates = NotificationTemplateFixtures()
         self.templates.setUp()
 
         frappe.set_user("Guest")

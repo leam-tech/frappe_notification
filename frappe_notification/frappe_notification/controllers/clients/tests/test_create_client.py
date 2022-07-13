@@ -12,9 +12,10 @@ from ..create_client import create_notification_client
 
 
 class TestCreateClient(TestCase):
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     def setUp(self):
+        self.clients = NotificationClientFixtures()
         self.clients.setUp()
 
         frappe.set_user("Guest")

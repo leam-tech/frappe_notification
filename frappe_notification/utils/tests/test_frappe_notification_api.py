@@ -19,10 +19,11 @@ class TestFrappeNotificationAPI(TestCase):
     Expose apis without need for any login (Guests)
     """
 
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
     @classmethod

@@ -11,11 +11,14 @@ from ..get_channels import get_channels
 
 
 class TestGetChannels(TestCase):
-    channels = NotificationChannelFixtures()
-    clients = NotificationClientFixtures()
+    channels: NotificationChannelFixtures = None
+    clients: NotificationClientFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.channels = NotificationChannelFixtures()
+        cls.clients = NotificationClientFixtures()
+
         cls.channels.setUp()
         cls.clients.setUp()
 

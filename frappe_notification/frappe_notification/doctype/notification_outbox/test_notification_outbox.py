@@ -38,9 +38,9 @@ class NotificationOutboxFixtures(TestFixture):
 class TestNotificationOutbox(unittest.TestCase):
 
     faker = Faker()
-    outboxes = NotificationOutboxFixtures()
-    clients = NotificationClientFixtures()
-    channels = NotificationChannelFixtures()
+    outboxes: NotificationOutboxFixtures = None
+    channels: NotificationChannelFixtures = None
+    clients: NotificationClientFixtures = None
 
     VALID_MOBILE_NO = "+966560440266"
     INVALID_MOBILE_NO_1 = "+966560440299"
@@ -51,6 +51,10 @@ class TestNotificationOutbox(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.outboxes = NotificationOutboxFixtures()
+        cls.channels = NotificationChannelFixtures()
+        cls.clients = NotificationClientFixtures()
+
         cls.channels.setUp()
         cls.clients.setUp()
 

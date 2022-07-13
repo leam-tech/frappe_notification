@@ -10,10 +10,11 @@ from ..get_me import get_me
 
 
 class TestGetMe(TestCase):
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
     @classmethod

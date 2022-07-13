@@ -9,10 +9,11 @@ from ..utils import validate_client_access
 
 
 class TestValidateClientAccess(TestCase):
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
     @classmethod

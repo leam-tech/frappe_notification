@@ -14,9 +14,9 @@ from ..get_notification_logs import get_notification_logs, GetNotificationLogsEx
 
 class TestGetNotificationLogs(TestCase):
     faker = Faker()
-    channels = NotificationChannelFixtures()
-    clients = NotificationClientFixtures()
-    outboxes = NotificationOutboxFixtures()
+    channels: NotificationChannelFixtures = None
+    clients: NotificationClientFixtures = None
+    outboxes: NotificationOutboxFixtures = None
 
     N_FIXTURE_OUTBOXES = 5
     CLIENT: str = None
@@ -29,6 +29,10 @@ class TestGetNotificationLogs(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.channels = NotificationChannelFixtures()
+        cls.clients = NotificationClientFixtures()
+        cls.outboxes = NotificationOutboxFixtures()
+
         cls.channels.setUp()
         cls.clients.setUp()
         cls.outboxes.setUp()

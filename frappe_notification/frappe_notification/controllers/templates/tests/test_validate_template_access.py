@@ -16,11 +16,14 @@ from ..utils import validate_template_access
 
 
 class TestValidateTemplateAccess(TestCase):
-    clients = NotificationClientFixtures()
-    templates = NotificationTemplateFixtures()
+    clients: NotificationClientFixtures = None
+    templates: NotificationTemplateFixtures = None
 
     @classmethod
     def setUpClass(cls):
+        cls.clients = NotificationClientFixtures()
+        cls.templates = NotificationTemplateFixtures()
+
         cls.clients.setUp()
         cls.templates.setUp()
 

@@ -18,10 +18,11 @@ def patch_get_request_header(fn):
 
 
 class TestGetActiveNotificationClient(TestCase):
-    clients = NotificationClientFixtures()
+    clients: NotificationClientFixtures = None
 
     @classmethod
     def setUpClass(cls) -> None:
+        cls.clients = NotificationClientFixtures()
         cls.clients.setUp()
 
     @classmethod
