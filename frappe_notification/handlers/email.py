@@ -44,6 +44,7 @@ def email_handler(
                 subject=subject,
                 content=content,
                 sender=sender,
+                delayed=False,
             )
 
         outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
