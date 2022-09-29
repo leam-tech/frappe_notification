@@ -243,6 +243,7 @@ class TestNotificationOutbox(unittest.TestCase):
         # Update status of all rows as success
         for row in d.recipients:
             d.update_status(row.name, NotificationOutboxStatus.SUCCESS)
+            self.assertIsNotNone(row.time_sent)
 
         self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.SUCCESS)
 
