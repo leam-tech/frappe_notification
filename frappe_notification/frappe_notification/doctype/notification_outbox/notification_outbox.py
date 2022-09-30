@@ -5,6 +5,7 @@ from enum import Enum
 
 import frappe
 from frappe.model.document import Document
+from frappe.utils import now_datetime
 
 from frappe_notification import (
     NotificationChannelHandlerNotFound,
@@ -173,6 +174,8 @@ class NotificationOutbox(Document):
 
         # Update row status
         row.status = status.value
+        if status == status.SUCCESS:
+            row.time_sent = now_datetime()
 
         # Update Outbox Status
         row_statuses = set([NotificationOutboxStatus(x.status) for x in self.recipients])

@@ -1,1 +1,2 @@
 frappe_notification.patches.v0.remove_outbox_channel_id_index
+frappe_notification.patches.v0.outbox_recipient_item_time_sent
