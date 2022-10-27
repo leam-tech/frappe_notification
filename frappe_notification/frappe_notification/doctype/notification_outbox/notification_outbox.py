@@ -1,6 +1,6 @@
 # Copyright (c) 2022, Leam Technology Systems and contributors
 # For license information, please see license.txt
-from typing import List, Dict, Callable, Optional, Union
+from typing import List, Dict, Callable, Optional, Tuple, Union
 from enum import Enum
 
 import frappe
@@ -25,21 +25,40 @@ class NotificationOutboxStatus(Enum):
     PARTIAL_SUCCESS = "Partial Success"
 
 
-class ChannelHandlerInvokeParams(frappe._dict):
-    channel: str
+class RecipientsBatchItem(frappe._dict):
+    outbox_row_name: str
+    user_identifier: str
     channel_id: str
-    channel_args: dict
-    user_identifier: Optional[str]
 
+
+class RecipientsBatch(frappe._dict):
+    channel: str
+    channel_args: str
+    sender_type: str
+    sender: str
+    items: List[RecipientsBatchItem]
+
+
+class ChannelHandlerParamsBase(frappe._dict):
+    channel: str
+    channel_args: dict
     sender: str
     sender_type: str
     to_validate: bool
 
     outbox: str
-    outbox_row_name: str
-
     content: str
     subject: str
+
+
+class ChannelHandlerParams(ChannelHandlerParamsBase):
+    channel_id: str
+    user_identifier: Optional[str]
+    outbox_row_name: str
+
+
+class ChannelHandlerParamsBatched(ChannelHandlerParamsBase):
+    items: List[RecipientsBatchItem]
 
 
 HOOK_NOTIFICATION_CHANNEL_HANDLER = "notification_channel_handler"
@@ -78,11 +97,9 @@ class NotificationOutbox(Document):
         self.send_pending_notifications()
 
     def send_pending_notifications(self):
-        for row in self.recipients:
-            if NotificationOutboxStatus(row.status) != NotificationOutboxStatus.PENDING:
-                continue
-
-            params = self._get_channel_handler_invoke_params(row)
+        recipients = self.get_batched_recipients(self.recipients)
+        for r in recipients:
+            params = _get_channel_handler_invoke_params(self, r)
             fn = self.get_channel_handler(params.channel)
             fn.fnargs = params.keys()  # please check frappe.call implementation
 
@@ -101,7 +118,7 @@ class NotificationOutbox(Document):
         """
         errors = []
 
-        def _process_exc(params: ChannelHandlerInvokeParams, err):
+        def _process_exc(params: ChannelHandlerParams, err):
             err = err.as_dict() if isinstance(err, FrappeNotificationException) else frappe._dict(
                 message=str(err), error_code="UNKNOWN_ERROR")
 
@@ -109,7 +126,7 @@ class NotificationOutbox(Document):
             return err
 
         for row in self.recipients:
-            params = self._get_channel_handler_invoke_params(row)
+            params = _get_channel_handler_invoke_params(self, row)
             params.to_validate = True
 
             handler = self.get_channel_handler(params.channel)
@@ -189,24 +206,95 @@ class NotificationOutbox(Document):
         self.flags.ignore_validate_update_after_submit = True
         self.save(ignore_permissions=True)
 
-    def _get_channel_handler_invoke_params(self, row: NotificationOutboxRecipientItem):
-        channel_args = row.channel_args
-        if isinstance(channel_args, str):
-            channel_args = frappe.parse_json(channel_args)
+    def get_batched_recipients(
+        self, recipients: List[NotificationOutboxRecipientItem]
+    ) -> List[Union[NotificationOutboxRecipientItem, RecipientsBatch]]:
+        """
+        Batch similar Recipients together.
+        Batching rules:
+        - Same Channel
+        - Same Channel Args
+        """
+        supported_channels = {
+            x.name: x.batch_recipients_size
+            for x in frappe.get_all(
+                "Notification Channel",
+                dict(batch_recipients=1))
+        }
 
-        if not channel_args:
-            channel_args = dict()
+        batches = []
+        active_batch = dict()
 
-        return ChannelHandlerInvokeParams(dict(
-            channel=row.get("channel"),
-            channel_id=row.get("channel_id"),
-            channel_args=channel_args,
-            user_identifier=row.get("user_identifier"),
-            sender=row.get("sender"),
-            sender_type=row.get("sender_type"),
-            subject=self.get("subject"),
-            content=self.get("content"),
-            to_validate=False,
-            outbox=self.name,
-            outbox_row_name=row.get("name"),
+        def _finalize_active_batch(k: Tuple[str, str]):
+            _batch = active_batch[k]
+            del _batch.count
+            del active_batch[k]
+
+            batches.append(RecipientsBatch(dict(
+                channel=k[0],
+                channel_args=k[1],
+                sender_type=k[2],
+                sender=k[3],
+                channel_ids=_batch,
+            )))
+
+        for r in recipients:
+            if r.status != NotificationOutboxStatus.PENDING.value:
+                continue
+
+            if r.channel not in supported_channels:
+                # Add back as normal Recipient Item
+                batches.append(r)
+                continue
+
+            k = (r.channel, r.channel_args, r.sender_type, r.sender_type)
+            _batch_item: dict = active_batch.setdefault(k, dict(count=0))
+            _user_identifier: list = _batch_item.setdefault(r.user_identifier, [])
+            _user_identifier.append(r.channel_id)
+            _batch_item.count += 1
+
+            if _batch_item.count >= supported_channels[r.channel]:
+                # Current batch is full. Wrap it up and let's reset.
+                _finalize_active_batch(k)
+
+        # Finalize incomplete batches
+        for k in list(active_batch.keys()):
+            _finalize_active_batch(k)
+
+        return batches
+
+
+def _get_channel_handler_invoke_params(
+    outbox: NotificationOutbox,
+    recipient: Union[NotificationOutboxRecipientItem, RecipientsBatch]
+):
+    channel_args = recipient.channel_args
+    if isinstance(channel_args, str):
+        channel_args = frappe.parse_json(channel_args)
+
+    if not channel_args:
+        channel_args = dict()
+
+    _common = dict(
+        channel_args=channel_args,
+        channel=recipient.get("channel"),
+        sender=recipient.get("sender"),
+        sender_type=recipient.get("sender_type"),
+        subject=outbox.get("subject"),
+        content=outbox.get("content"),
+        to_validate=False,
+        outbox=outbox.name,
+    )
+
+    if isinstance(recipient, RecipientsBatch):
+        return ChannelHandlerParamsBatched(dict(
+            **_common,
+            items=recipient.items,
         ))
+
+    return ChannelHandlerParams(dict(
+        **_common,
+        channel_id=recipient.get("channel_id"),
+        user_identifier=recipient.get("user_identifier"),
+        outbox_row_name=recipient.get("name"),
+    ))

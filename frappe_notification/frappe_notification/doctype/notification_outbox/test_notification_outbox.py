@@ -21,8 +21,10 @@ from frappe_notification import (
 from .notification_outbox import (
     NotificationOutbox,
     NotificationOutboxRecipientItem,
-    ChannelHandlerInvokeParams,
+    ChannelHandlerParams,
+    ChannelHandlerParamsBatched,
     NotificationOutboxStatus,
+    _get_channel_handler_invoke_params,
     HOOK_NOTIFICATION_CHANNEL_HANDLER)
 
 
@@ -164,7 +166,7 @@ class TestNotificationOutbox(unittest.TestCase):
         # - Test valid number
         d.recipients = [[x for x in d.recipients if x.channel == sms_channel][0]]
         d.validate_recipient_channel_ids()
-        params = self._get_channel_handler_invoke_params(d, d.recipients[0])
+        params = _get_channel_handler_invoke_params(d, d.recipients[0])
         params.to_validate = True
         sms_handler.assert_called_once_with(**params)
 
@@ -204,8 +206,8 @@ class TestNotificationOutbox(unittest.TestCase):
             channel=self.channels.get_channel("Email"),
             channel_id="test!notifications.com"))
 
-        invoke_params_0 = self._get_channel_handler_invoke_params(d, d.recipients[0])
-        invoke_params_1 = self._get_channel_handler_invoke_params(d, d.recipients[1])
+        invoke_params_0 = _get_channel_handler_invoke_params(d, d.recipients[0])
+        invoke_params_1 = _get_channel_handler_invoke_params(d, d.recipients[1])
 
         sms_channel = self.channels.get_channel("SMS")
         sms_handler = self.get_channel_handler(sms_channel)
@@ -306,29 +308,3 @@ class TestNotificationOutbox(unittest.TestCase):
                 return dict()
 
         return _inner
-
-    def _get_channel_handler_invoke_params(
-            self,
-            d: NotificationOutbox,
-            row: NotificationOutboxRecipientItem):
-
-        channel_args = row.channel_args
-        if isinstance(channel_args, str):
-            channel_args = frappe.parse_json(channel_args)
-
-        if not channel_args:
-            channel_args = dict()
-
-        return ChannelHandlerInvokeParams(dict(
-            channel=row.get("channel"),
-            channel_id=row.get("channel_id"),
-            channel_args=channel_args,
-            user_identifier=row.get("user_identifier"),
-            sender=row.get("sender"),
-            sender_type=row.get("sender_type"),
-            subject=d.get("subject"),
-            content=d.get("content"),
-            to_validate=False,
-            outbox=d.name,
-            outbox_row_name=row.get("name"),
-        ))
