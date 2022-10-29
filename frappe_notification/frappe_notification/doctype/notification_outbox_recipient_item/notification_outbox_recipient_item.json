@@ -27,6 +27,7 @@
    "search_index": 1
   },
   {
+   "default": "Pending",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -40,8 +41,7 @@
    "fieldtype": "Code",
    "in_list_view": 1,
    "label": "Channel ID",
-   "reqd": 1,
-   "search_index": 0
+   "reqd": 1
   },
   {
    "fieldname": "time_sent",
@@ -84,7 +84,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-06-13 12:05:00.545779",
+ "modified": "2022-10-29 07:21:00.694361",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Outbox Recipient Item",

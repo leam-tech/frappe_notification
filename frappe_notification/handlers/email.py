@@ -47,6 +47,6 @@ def email_handler(
                 delayed=False,
             )
 
-        outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
+        outbox.update_recipient_status({outbox_row_name: NotificationOutboxStatus.SUCCESS})
     except BaseException:
-        outbox.update_status(outbox_row_name, NotificationOutboxStatus.FAILED)
+        outbox.update_recipient_status({outbox_row_name: NotificationOutboxStatus.FAILED})

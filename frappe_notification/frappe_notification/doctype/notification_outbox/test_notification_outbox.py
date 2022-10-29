@@ -21,8 +21,7 @@ from frappe_notification import (
 from .notification_outbox import (
     NotificationOutbox,
     NotificationOutboxRecipientItem,
-    ChannelHandlerParams,
-    ChannelHandlerParamsBatched,
+    RecipientsBatch,
     NotificationOutboxStatus,
     _get_channel_handler_invoke_params,
     HOOK_NOTIFICATION_CHANNEL_HANDLER)
@@ -73,6 +72,8 @@ class TestNotificationOutbox(unittest.TestCase):
         cls.CHANNEL_VERIFICATIONS[cls.channels.get_channel("Email")] = dict({
             cls.VALID_EMAIL_ID: None
         })
+
+        cls.CHANNEL_VERIFICATIONS[cls.channels.get_channel("FCM")] = dict()
 
     def setUp(self):
         self.outboxes.setUp()
@@ -189,7 +190,57 @@ class TestNotificationOutbox(unittest.TestCase):
         self.assertEqual(exc.data.recipient_errors[0].error_code,
                          "UNKNOWN_ERROR")
 
-    def test_send_notifications_1(self):
+    def test_recipients_batching_simple(self):
+        """
+        Simple Recipients batching where 4 FCM Token gets batched as one
+        """
+        d = self.get_draft_outbox()
+        d.recipients = []
+        for i in range(4):
+            d.append("recipients", dict(
+                channel=self.channels.get_channel("FCM"),
+                channel_id="random-token-{}".format(i),
+                user_identifier="user-{}".format(0 if i < 2 else 1),
+            ))
+
+        batched_recipients = d.get_batched_recipients()
+        self.assertEqual(len(batched_recipients), 1)
+        self.assertIsInstance(batched_recipients[0], RecipientsBatch)
+
+        batch = batched_recipients[0]
+        self.assertEqual(batch.channel, self.channels.get_channel("FCM"))
+        self.assertEqual(batch.channel_args, None)
+        self.assertTrue("user-0" in batch.channel_ids)
+        self.assertTrue("user-1" in batch.channel_ids)
+        self.assertCountEqual(batch.channel_ids["user-0"], ['random-token-0', 'random-token-1'])
+        self.assertCountEqual(batch.channel_ids["user-1"], ['random-token-2', 'random-token-3'])
+
+    def test_recipients_batching_mixed(self):
+        """
+        A mix of recipients happen when there are
+        batched & non-batched recipients in a single outbox
+        """
+        # Draft outbox already has SMS & Email recipients
+        d = self.get_draft_outbox()
+        num_non_batched = len(d.recipients)
+
+        # Lets add a couple of FCM Recipients (Batched)
+        for i in range(4):
+            d.append("recipients", dict(
+                channel=self.channels.get_channel("FCM"),
+                channel_id="random-token-{}".format(i),
+                user_identifier="user-{}".format(0 if i < 2 else 1),
+            ))
+
+        recipients = d.get_batched_recipients()
+        self.assertEqual(len(recipients), num_non_batched + 1)
+        for idx, r in enumerate(recipients):
+            if idx < num_non_batched:
+                self.assertIsInstance(r, NotificationOutboxRecipientItem)
+            else:
+                self.assertIsInstance(r, RecipientsBatch)
+
+    def test_send_notifications_simple(self):
         """
         - Lets try sending out two Notifications, 1 SMS & 1 Email
         """
@@ -226,7 +277,73 @@ class TestNotificationOutbox(unittest.TestCase):
         sms_handler.assert_called_once_with(**invoke_params_0)
         email_handler.assert_called_once_with(**invoke_params_1)
 
-    def test_update_status(self):
+    def test_send_notifications_batched(self):
+        """
+        Lets try sending notification to 4 FCM Tokens
+        """
+        d = self.get_draft_outbox()
+        d._channel_handlers = dict()
+
+        d.recipients = []
+        for i in range(4):
+            d.append("recipients", dict(
+                channel=self.channels.get_channel("FCM"),
+                channel_id="random-token-{}".format(i),
+                user_identifier="user-{}".format(0 if i < 2 else 1),
+            ))
+
+        _invoke_params = _get_channel_handler_invoke_params(d, d.get_batched_recipients()[0])
+
+        fcm_channel = self.channels.get_channel("FCM")
+        fcm_handler = self.get_channel_handler(fcm_channel)
+        fcm_handler.fnargs = _invoke_params.keys()  # Please check frappe.call() implementation
+
+        d._channel_handlers[fcm_channel] = fcm_handler
+
+        d.before_submit()
+        d.send_pending_notifications()
+
+        fcm_handler.assert_called_once_with(**_invoke_params)
+
+    def test_send_notifications_batched_mixed(self):
+        """
+        Send to SMS and FCM
+        """
+        d = self.get_draft_outbox()
+        d._channel_handlers = dict()
+
+        # Only SMS Recipients
+        d.recipients = [x for x in d.recipients if x.channel == self.channels.get_channel("SMS")]
+        self.assertTrue(len(d.recipients) > 0)
+
+        for i in range(4):
+            d.append("recipients", dict(
+                channel=self.channels.get_channel("FCM"),
+                channel_id="random-token-{}".format(i),
+                user_identifier="user-{}".format(0 if i < 2 else 1),
+            ))
+
+        fcm_invoke_params = _get_channel_handler_invoke_params(d, d.get_batched_recipients()[-1])
+        sms_invoke_params = _get_channel_handler_invoke_params(d, d.recipients[0])
+
+        sms_channel = self.channels.get_channel("SMS")
+        sms_handler = self.get_channel_handler(sms_channel)
+        sms_handler.fnargs = sms_invoke_params.keys()  # Please check frappe.call() implementation
+
+        fcm_channel = self.channels.get_channel("FCM")
+        fcm_handler = self.get_channel_handler(fcm_channel)
+        fcm_handler.fnargs = fcm_invoke_params.keys()  # Please check frappe.call() implementation
+
+        d._channel_handlers[sms_channel] = sms_handler
+        d._channel_handlers[fcm_channel] = fcm_handler
+
+        d.before_submit()
+        d.send_pending_notifications()
+
+        self.assertEqual(sms_handler.call_count, len([x for x in d.recipients if x.channel == self.channels.get_channel("SMS")]))  # noqa
+        fcm_handler.assert_called_once()
+
+    def test_update_recipient_status(self):
         d = self.get_draft_outbox()
         d.before_submit()
         d.insert()
@@ -239,24 +356,28 @@ class TestNotificationOutbox(unittest.TestCase):
             self.assertEqual(NotificationOutboxStatus(row.status), NotificationOutboxStatus.PENDING)
 
         # Update status of non-existent row
-        d.update_status("random-row", NotificationOutboxStatus.FAILED)
+        d.update_recipient_status(dict(random_row=NotificationOutboxStatus.FAILED))
         self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.PENDING)
 
         # Update status of all rows as success
-        for row in d.recipients:
-            d.update_status(row.name, NotificationOutboxStatus.SUCCESS)
-            self.assertIsNotNone(row.time_sent)
+        d.update_recipient_status({
+            r.name: NotificationOutboxStatus.SUCCESS
+            for r in d.recipients
+        })
+        self.assertTrue(all(r.time_sent for r in d.recipients))
 
         self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.SUCCESS)
 
         # Update status of all rows as Failure
-        for row in d.recipients:
-            d.update_status(row.name, NotificationOutboxStatus.FAILED)
+        d.update_recipient_status({
+            r.name: NotificationOutboxStatus.FAILED
+            for r in d.recipients
+        })
 
         self.assertEqual(NotificationOutboxStatus(d.status), NotificationOutboxStatus.FAILED)
 
-        # Update one row to be successfull
-        d.update_status(d.recipients[0].name, NotificationOutboxStatus.SUCCESS)
+        # Update one row to be successful
+        d.update_recipient_status({d.recipients[0].name: NotificationOutboxStatus.SUCCESS})
         self.assertEqual(
             NotificationOutboxStatus(d.status), NotificationOutboxStatus.PARTIAL_SUCCESS)
 

@@ -36,7 +36,7 @@ class RecipientsBatch(frappe._dict):
     channel_args: str
     sender_type: str
     sender: str
-    items: List[RecipientsBatchItem]
+    recipients: List[RecipientsBatchItem]
 
 
 class ChannelHandlerParamsBase(frappe._dict):
@@ -58,7 +58,7 @@ class ChannelHandlerParams(ChannelHandlerParamsBase):
 
 
 class ChannelHandlerParamsBatched(ChannelHandlerParamsBase):
-    items: List[RecipientsBatchItem]
+    recipients: List[RecipientsBatchItem]
 
 
 HOOK_NOTIFICATION_CHANNEL_HANDLER = "notification_channel_handler"
@@ -97,7 +97,7 @@ class NotificationOutbox(Document):
         self.send_pending_notifications()
 
     def send_pending_notifications(self):
-        recipients = self.get_batched_recipients(self.recipients)
+        recipients = self.get_batched_recipients()
         for r in recipients:
             params = _get_channel_handler_invoke_params(self, r)
             fn = self.get_channel_handler(params.channel)
@@ -174,25 +174,28 @@ class NotificationOutbox(Document):
 
         return _set_handler(handler)
 
-    def update_status(self, outbox_row_name: str, status: NotificationOutboxStatus):
+    def update_recipient_status(self, recipient_status: Dict[str, NotificationOutboxStatus]):
         """
         Update the OutboxItem status & the status of the Outbox itself
         """
         if self.docstatus != 1:
             return
 
-        row = self.get("recipients", {"name": outbox_row_name})
-        if not row:
-            return
+        has_update = False
+        for r in self.recipients:
+            if r.name not in recipient_status:
+                continue
 
-        row = row[0]
-        if NotificationOutboxStatus(row.status) == status:
-            return
+            if r.status == recipient_status[r.name].value:
+                continue
 
-        # Update row status
-        row.status = status.value
-        if status == status.SUCCESS:
-            row.time_sent = now_datetime()
+            has_update = True
+            r.status = recipient_status[r.name].value
+            if r.status == NotificationOutboxStatus.SUCCESS.value:
+                r.time_sent = now_datetime()
+
+        if not has_update:
+            return
 
         # Update Outbox Status
         row_statuses = set([NotificationOutboxStatus(x.status) for x in self.recipients])
@@ -207,7 +210,7 @@ class NotificationOutbox(Document):
         self.save(ignore_permissions=True)
 
     def get_batched_recipients(
-        self, recipients: List[NotificationOutboxRecipientItem]
+            self
     ) -> List[Union[NotificationOutboxRecipientItem, RecipientsBatch]]:
         """
         Batch similar Recipients together.
@@ -216,7 +219,7 @@ class NotificationOutbox(Document):
         - Same Channel Args
         """
         supported_channels = {
-            x.name: x.batch_recipients_size
+            x.name: x.batch_recipients_size or 5
             for x in frappe.get_all(
                 "Notification Channel",
                 dict(batch_recipients=1))
@@ -227,7 +230,7 @@ class NotificationOutbox(Document):
 
         def _finalize_active_batch(k: Tuple[str, str]):
             _batch = active_batch[k]
-            del _batch.count
+            del _batch["count"]
             del active_batch[k]
 
             batches.append(RecipientsBatch(dict(
@@ -238,7 +241,9 @@ class NotificationOutbox(Document):
                 channel_ids=_batch,
             )))
 
-        for r in recipients:
+        for r in self.recipients:
+            if r.status is None:
+                r.status = NotificationOutboxStatus.PENDING.value
             if r.status != NotificationOutboxStatus.PENDING.value:
                 continue
 
@@ -248,7 +253,7 @@ class NotificationOutbox(Document):
                 continue
 
             k = (r.channel, r.channel_args, r.sender_type, r.sender_type)
-            _batch_item: dict = active_batch.setdefault(k, dict(count=0))
+            _batch_item: dict = active_batch.setdefault(k, frappe._dict(count=0))
             _user_identifier: list = _batch_item.setdefault(r.user_identifier, [])
             _user_identifier.append(r.channel_id)
             _batch_item.count += 1
@@ -282,14 +287,14 @@ def _get_channel_handler_invoke_params(
         sender_type=recipient.get("sender_type"),
         subject=outbox.get("subject"),
         content=outbox.get("content"),
-        to_validate=False,
         outbox=outbox.name,
+        to_validate=False,
     )
 
     if isinstance(recipient, RecipientsBatch):
         return ChannelHandlerParamsBatched(dict(
             **_common,
-            items=recipient.items,
+            recipients=recipient.recipients,
         ))
 
     return ChannelHandlerParams(dict(
