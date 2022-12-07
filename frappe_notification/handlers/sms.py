@@ -55,6 +55,6 @@ def sms_handler(
         if not frappe.flags.in_test:
             send_sms([channel_id], msg=content, success_msg=False)
 
-        outbox.update_status(outbox_row_name, NotificationOutboxStatus.SUCCESS)
+        outbox.update_recipient_status({outbox_row_name: NotificationOutboxStatus.SUCCESS})
     except BaseException:
-        outbox.update_status(outbox_row_name, NotificationOutboxStatus.FAILED)
+        outbox.update_recipient_status({outbox_row_name: NotificationOutboxStatus.FAILED})

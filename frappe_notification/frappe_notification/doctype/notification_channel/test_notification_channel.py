@@ -26,7 +26,7 @@ class NotificationChannelFixtures(TestFixture):
         return super().tearDown()
 
     def make_fixtures(self):
-        channels = ["SMS", "Email", "Whatsapp", "Telegram", "Slack"]
+        channels = ["SMS", "Email", "Whatsapp", "Telegram", "Slack", "FCM"]
         for channel in channels:
             if frappe.db.exists("Notification Channel", channel):
                 channel = frappe.get_doc("Notification Channel", channel)

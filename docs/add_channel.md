@@ -37,7 +37,7 @@ FrappeNotifications App allows you to add your own custom notification channel. 
     - if to_validate is True, do not send notification. Raise error if you have any issues in validations
     - Send out the notification otherwise
     - Update the outbox.outbox_row_name status with
-        frappe.get_doc("Notification Outbox", outbox).update_status(outbox_row_name=outbox_row_name, status=NotificationOutboxStatus.SUCCESS)
+        frappe.get_doc("Notification Outbox", outbox).update_recipient_status(dict(outbox_row_name=NotificationOutboxStatus.SUCCESS))
     """
     pass
   ```

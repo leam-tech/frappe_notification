@@ -10,7 +10,9 @@
   "enabled",
   "title",
   "sender_type",
-  "default_sender"
+  "default_sender",
+  "batch_recipients",
+  "batch_recipients_size"
  ],
  "fields": [
   {
@@ -38,11 +40,23 @@
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "fieldname": "batch_recipients",
+   "fieldtype": "Check",
+   "label": "Batch Recipients"
+  },
+  {
+   "depends_on": "batch_recipients",
+   "fieldname": "batch_recipients_size",
+   "fieldtype": "Int",
+   "label": "Batch Size"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-04-21 14:58:05.115490",
+ "modified": "2022-10-21 11:34:50.018603",
  "modified_by": "Administrator",
  "module": "Frappe Notification",
  "name": "Notification Channel",
